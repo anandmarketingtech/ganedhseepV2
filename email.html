@@ -1,0 +1,60 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Form</title>
+  <link rel="stylesheet" href="email.css">
+</head>
+<body>
+  <div class="form-container">
+    <h2>Contact Us</h2>
+    <form id="emailForm">
+      <input type="text" id="name" placeholder="Your Name" required />
+      <input type="email" id="email" placeholder="Your Email" required />
+      <textarea id="message" placeholder="Your Message" required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+    <p id="status"></p>
+  </div>
+
+  <script src="mail.js"></script>
+</body>
+</html>
+
+
+ -->
+
+
+<!-- new Codes By Dependra  -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Form</title>
+  <link rel="stylesheet" href="email.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type = "text/javascript">
+     (function(){
+      emailjs.init({
+        publicKey: "aLg3g2Ge58mA-HpUU",
+      });
+   })();
+  </script>
+
+</head>
+<body>
+  <div class="form-container">
+    <h2>Contact Us</h2>
+    <form id="emailForm">
+      <input type="text" id="name" placeholder="Your Name" required />
+      <input type="email" id="email_id" placeholder="Your Email" required />
+      <textarea id="message" placeholder="Your Message" required></textarea>
+      <button onclick="sendMail()">Send</button>
+    </form>
+    <p id="status"></p>
+  </div>
+
+  <script src="mail.js"></script>
+</body>
+</html>
+<!-- new Codes By Dependra  -->
