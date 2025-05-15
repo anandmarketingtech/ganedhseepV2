@@ -72,15 +72,7 @@ app.post('/send-email', async (req, res) => {
       // Order email with tabular data
       emailSubject = `New Order from ${name}`;
       
-      // Calculate total price if available
-      let totalPrice = 0;
-      cart.forEach(item => {
-        if (item.price) {
-          totalPrice += (parseFloat(item.price) * item.qty);
-        }
-      });
-
-      // Generate order HTML
+      // Remove price calculation and price column
       htmlBody = `
         <!DOCTYPE html>
         <html>
@@ -104,15 +96,18 @@ app.post('/send-email', async (req, res) => {
             <table>
               <thead>
                 <tr>
-                  <th style="width: 40%;">Product</th>
-                  <th style="width: 15%;">Quantity</th>
-                  <th style="width: 20%;">Color</th>
-                  <th style="width: 25%;">Price</th>
+                  <th style="width: 10%;">Image</th>
+                  <th style="width: 45%;">Product</th>
+                  <th style="width: 20%;">Quantity</th>
+                  <th style="width: 25%;">Color</th>
                 </tr>
               </thead>
               <tbody>
                 ${cart.map(item => `
                   <tr>
+                    <td>
+                      ${item.image || item.img ? `<img src="${item.image || item.img}" alt="Product" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #eee;">` : ''}
+                    </td>
                     <td>${item.title || 'Unknown Product'}</td>
                     <td>${item.qty || 1}</td>
                     <td>
@@ -121,18 +116,9 @@ app.post('/send-email', async (req, res) => {
                         'N/A'
                       }
                     </td>
-                    <td>${item.price ? `$${parseFloat(item.price).toFixed(2)}` : 'N/A'}</td>
                   </tr>
                 `).join('')}
               </tbody>
-              ${totalPrice > 0 ? `
-                <tfoot>
-                  <tr>
-                    <td colspan="3" style="text-align: right; font-weight: bold;">Total:</td>
-                    <td style="font-weight: bold;">$${totalPrice.toFixed(2)}</td>
-                  </tr>
-                </tfoot>
-              ` : ''}
             </table>
 
             <div class="footer">

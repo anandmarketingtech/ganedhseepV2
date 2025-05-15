@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM fully loaded'); // Debug: DOM loaded
 
