@@ -61,7 +61,7 @@
         </div>
         <!-- Logo Area -->
         <div class="logo-area">
-            <a href="index.html"><img class="logoImage" src="img/bg-img/Logo.png" style="max-width: 50%;" alt=""></a>
+            <a href="index.html"><img class="logoImage" src="img/bg-img/LogoJ.png" style="max-width: 50%;" alt=""></a>
         </div>
         <!-- Nav -->
         <div class="sonarNav">
@@ -109,7 +109,7 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
                     <div class="menu-area d-flex justify-content-between">
                         <!-- Logo Area  -->
                         <div class="logo-area">
-                            <a href="index.html"><img class="logoImage" src="img/bg-img/Logo.png" style="max-width: 50%;" alt=""></a>
+                            <a href="index.html"><img class="logoImage" src="img/bg-img/LogoJ.png" style="max-width: 50%;" alt=""></a>
                         </div>
 
                         <div class="menu-content-area d-flex align-items-center">
@@ -170,54 +170,44 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
                 <div class="col-12">
                     <div class="contact-form text-center">
 
-                        <h2>We are  an experienced knitwear provider</h2>
-                        <h4>Let’s talk</h4>
+                        <h2>We are an experienced knitwear provider</h2>
+                        <h4>Let's talk</h4>
 
-
-
-                        <!-- <div class="form-container">
-                            <h2>Contact Us</h2>
-                            <form id="emailForm">
-                              <input type="text" id="name" placeholder="Your Name" required />
-                              <input type="email" id="email_id" placeholder="Your Email" required />
-                              <textarea id="message" placeholder="Your Message" required></textarea>
-                              <button onclick="sendMail()">Send</button>
-                            </form>
-                            <p id="status"></p>
-                          </div> -->
-
-
-
-
-
-                        <form id="emailForm" action="#" method="post">
-                            <div class="row">
-                                <div class="col-12 col-md-4">
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" id="name" placeholder="Your Name">
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <div class="form-group">
-                                        <input type="email" class="form-control" id="email_id" placeholder="Your Email">
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" id="contact-email" placeholder="Subject">
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-group">
-                                        <textarea class="form-control" name="message" id="message" cols="30" rows="10" placeholder="Message"></textarea>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn sonar-btn" onclick="sendMail()">Contact Us</button>
-                                </div>
-                                <p id="status"></p>
-                            </div>
-                        </form>
+                        <form id="contactForm" onsubmit="sendContactMail(event)">
+        <div class="row">
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <input type="text" class="form-control" id="contactName" placeholder="Your Name" required>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <input type="email" class="form-control" id="contactEmail" placeholder="Your Email" required>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <input type="text" class="form-control" id="contactSubject" placeholder="Subject" required>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group">
+                    <textarea class="form-control" id="contactMessage" cols="30" rows="10" placeholder="Message" required></textarea>
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn sonar-btn" id="contactSubmitBtn">
+                    Contact Us
+                    <span id="contactLoader" style="display:none; margin-left:10px;">
+                        <img src="img/core-img/loading.gif" alt="Loading..." style="width:20px; height:20px;">
+                    </span>
+                </button>
+            </div>
+            <div class="col-12 mt-4">
+                <p id="contactStatus" style="display:none;" class="alert"></p>
+            </div>
+        </div>
+    </form>
                     </div>
                 </div>
             </div>
@@ -267,6 +257,54 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwuyLRa1uKNtbgx6xAJVmWy-zADgegA2s"></script>
     <script src="js/map-active.js"></script>
     <script src="mail.js"></script>
+    <script>
+function sendContactMail(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('contactSubmitBtn');
+    const loader = document.getElementById('contactLoader');
+    const status = document.getElementById('contactStatus');
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    loader.style.display = 'inline-block';
+    status.style.display = 'none';
+    
+    const contactData = {
+        name: document.getElementById('contactName').value.trim(),
+        email: document.getElementById('contactEmail').value.trim(),
+        subject: document.getElementById('contactSubject').value.trim(),
+        message: document.getElementById('contactMessage').value.trim(),
+        type: 'contact' // To differentiate from order emails
+    };
+
+    fetch('http://localhost:3001/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactData)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            status.className = 'alert alert-success';
+            status.textContent = 'Thank you! Your message has been sent successfully.';
+            document.getElementById('contactForm').reset();
+        } else {
+            status.className = 'alert alert-danger';
+            status.textContent = data.message || 'Failed to send message. Please try again.';
+        }
+    })
+    .catch(error => {
+        status.className = 'alert alert-danger';
+        status.textContent = 'Failed to send message. Please try again. Error: ' + error.message;
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        loader.style.display = 'none';
+        status.style.display = 'block';
+    });
+}
+</script>
 </body>
 
 </html>

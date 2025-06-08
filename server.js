@@ -11,7 +11,7 @@ app.use(express.json());
 app.post('/send-email', async (req, res) => {
   try {
     console.log('Received request:', req.body); // Log the request body for debugging
-    const { name, email, message, phone, address, cart, subject } = req.body;
+    const { name, email, message, phone, address, cart, subject, type } = req.body;
 
     // Validate cart data
     if (cart) {
@@ -68,7 +68,45 @@ app.post('/send-email', async (req, res) => {
     });
 
     // Handle different email types
-    if (cart && Array.isArray(cart)) {
+    if (type === 'contact') {
+      // Contact form email
+      emailSubject = `New Contact Form Message: ${subject}`;
+      
+      // Format message with proper escaping and line breaks
+      const formattedMessage = message ? message.replace(/\n/g, '<br>') : '';
+
+      htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Contact Form Submission</title>
+          <style>${emailCSS}</style>
+        </head>
+        <body>
+          <div class="container">
+            <h2>New Contact Form Message</h2>
+            
+            <div class="info-section">
+              <div class="info-row"><span class="info-label">Name:</span> <span>${name}</span></div>
+              <div class="info-row"><span class="info-label">Email:</span> <span>${email}</span></div>
+              ${phone ? `<div class="info-row"><span class="info-label">Phone:</span> <span>${phone}</span></div>` : ''}
+              ${subject ? `<div class="info-row"><span class="info-label">Subject:</span> <span>${subject}</span></div>` : ''}
+              <div class="info-row"><span class="info-label">Date:</span> <span>${timestamp}</span></div>
+            </div>
+
+            <h2>Message</h2>
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #23232b;">
+              ${formattedMessage}
+            </div>
+
+            <div class="footer">
+              <p>This email was sent from your website contact form. Please respond to the sender directly.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    } else if (cart && Array.isArray(cart)) {
       // Order email with tabular data
       emailSubject = `New Order from ${name}`;
       
@@ -129,43 +167,10 @@ app.post('/send-email', async (req, res) => {
         </html>
       `;
     } else {
-      // Contact form email
-      emailSubject = subject ? `Contact Form: ${subject}` : 'New Contact Form Submission';
-      
-      // Format message with proper escaping and line breaks
-      const formattedMessage = message ? message.replace(/\n/g, '<br>') : '';
-
-      htmlBody = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Contact Form Submission</title>
-          <style>${emailCSS}</style>
-        </head>
-        <body>
-          <div class="container">
-            <h2>Contact Form Submission</h2>
-            
-            <div class="info-section">
-              <div class="info-row"><span class="info-label">Name:</span> <span>${name}</span></div>
-              <div class="info-row"><span class="info-label">Email:</span> <span>${email}</span></div>
-              ${phone ? `<div class="info-row"><span class="info-label">Phone:</span> <span>${phone}</span></div>` : ''}
-              ${subject ? `<div class="info-row"><span class="info-label">Subject:</span> <span>${subject}</span></div>` : ''}
-              <div class="info-row"><span class="info-label">Date:</span> <span>${timestamp}</span></div>
-            </div>
-
-            <h2>Message</h2>
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #23232b;">
-              ${formattedMessage}
-            </div>
-
-            <div class="footer">
-              <p>This email was sent from your website contact form. Please respond to the sender directly.</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid request. Missing required fields.'
+      });
     }
 
     // Send the mail and handle response

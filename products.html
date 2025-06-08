@@ -55,7 +55,7 @@
       "@type": "Organization",
       "name": "Ganeshdeep Knitwear",
       "url": "https://ganeshdeep.com/",
-      "logo": "https://ganeshdeep.com/img/bg-img/Logo.png",
+      "logo": "https://ganeshdeep.com/img/bg-img/LogoJ.png",
       "sameAs": [
         "https://www.facebook.com/ganeshdeepknitwear",
         "https://www.instagram.com/ganeshdeepknitwear"
@@ -431,9 +431,10 @@
 
         /* Prevent background scroll when modal is open */
         body.modal-open {
-            overflow: hidden !important;
             position: fixed;
-            width: 100vw;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
         /* shadcn/ui style dropdown for color picker */
@@ -522,333 +523,236 @@
             flex-shrink: 0;
         }
 
-        /* Fix for cart modal on mobile */
-        @media (max-width: 768px) {
-    #cartModal {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        right: 0 !important;
-        border-radius: 0 !important;
-    }
-
-    #cartModal.visible {
-        transform: translateX(0) !important;
-    }
-
-    #cartItems {
-        padding: 12px !important;
-    }
-
-    .cart-item {
-        padding: 16px;
-    }
-
-    .cart-item img {
-        width: 70px;
-        height: 70px;
-    }
-
-    #buyNowModal>div {
-        width: 90vw !important;
-        padding: 20px 16px !important;
-    }
-    
-    /* Product Modal Mobile Styles */
-    #productModal > div {
-        flex-direction: column !important;
-        max-width: 95vw !important;
-        width: 95vw !important;
-    }
-    
-    #productModal .modal-product-img {
-        max-width: 90% !important;
-        max-height: 200px !important;
-        margin: 0 auto !important;
-    }
-}
-
-        /* Buy Now Form Styling */
-        #buyNowForm input:focus,
-        #buyNowForm textarea:focus {
-            outline: none;
-            border-color: #3a3a4a;
-            box-shadow: 0 0 0 2px rgba(58, 58, 74, 0.2);
-        }
-
-        #buyNowForm input:hover,
-        #buyNowForm textarea:hover {
-            border-color: #aaa;
-        }
-
-        #buyNowSubmitBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(35, 35, 43, 0.25);
-        }
-
-        #buyNowSubmitBtn:active {
-            transform: translateY(1px);
-        }
-
-        #closeBuyNowModal:hover {
-            color: #000;
-        }
-
-        /* Cart Modal Sliding Panel (Desktop) */
+        /* Modern Cart Modal Styles */
 #cartModal {
     display: none;
     position: fixed;
     top: 0;
     right: 0;
-    width: 400px;
+    width: 380px;
     max-width: 95vw;
     height: 100vh;
     z-index: 10002;
-    background: #fff;
-    box-shadow: -4px 0 32px rgba(0, 0, 0, 0.18);
+    background: #ffffff;
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.15);
     padding: 0;
-    overflow-y: auto;
-    transition: transform 0.3s cubic-bezier(.4, 0, .2, 1), opacity 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateX(100%);
     opacity: 0;
     border-radius: 16px 0 0 16px;
 }
 
-        #cartModal.visible {
-            transform: translateX(0);
-            opacity: 1;
-        }
-
-        #cartModalOverlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 10001;
-    background: rgba(0, 0, 0, 0.25);
-    transition: opacity 0.2s;
-    opacity: 0;
-    backdrop-filter: blur(4px);
-}
-
-        #cartModal.visible+#cartModalOverlay {
-            opacity: 1;
-        }
-
-        /* Cart Header Styling */
 .cart-header {
+    padding: 24px;
+    border-bottom: 1px solid #f1f1f1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px 10px 20px;
-    border-bottom: 1px solid #eee;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 .cart-header h4 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #1a1a1a;
     margin: 0;
-    font-size: 1.2em;
-    color: #23232b;
 }
 
 .cart-header button {
-    background: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     border: none;
-    font-size: 2em;
-    line-height: 1;
+    background: #f5f5f5;
+    color: #666;
+    font-size: 1.2rem;
     cursor: pointer;
-    color: #444;
-    transition: color 0.2s;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cart-header button:hover {
-    color: #23232b;
+    background: #eeeeee;
+    color: #333;
 }
 
-/* Cart Empty Message */
-#cartEmptyMsg {
-    color: #888;
-    text-align: center;
-    margin-top: 30px;
-    padding: 40px 20px;
-    font-size: 1.1em;
+#cartItems {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #ffffff;
 }
 
-/* Cart Items Styling */
 .cart-item {
     display: flex;
     align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    position: relative;
-    transition: background 0.2s;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    border: 1px solid #f1f1f1;
 }
 
 .cart-item:hover {
-    background: #f9f9f9;
+    border-color: #e5e5e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .cart-item img {
-    width: 80px;
-    height: 80px;
+    width: 72px;
+    height: 72px;
     object-fit: cover;
     border-radius: 8px;
-    margin-right: 16px;
+    background: #f9f9f9;
+    border: 1px solid #f1f1f1;
 }
 
 .cart-item-details {
     flex: 1;
+    padding: 0 16px;
 }
 
 .cart-item-title {
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a1a1a;
     margin-bottom: 4px;
-    color: #23232b;
 }
 
-.cart-item-price {
+.cart-item-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
     color: #666;
-    font-size: 0.9em;
+    margin-top: 4px;
 }
 
-.cart-item-qty {
+.cart-item-color {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 6px;
 }
 
-.cart-item-qty button {
-    background: #f2f2f2;
-    border: none;
-    width: 24px;
-    height: 24px;
+.cart-item-color-swatch {
+    width: 14px;
+    height: 14px;
     border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.cart-item-qty button:hover {
-    background: #e5e5e5;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 .cart-item-remove {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: none;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
     border: none;
-    color: #999;
+    background: #f5f5f5;
+    color: #666;
+    font-size: 1.1rem;
     cursor: pointer;
-    font-size: 1.2em;
-    transition: color 0.2s;
-}
-
-.cart-item-remove:hover {
-    color: #ff4444;
-}
-
-/* Cart Button Styling */
-#cartBtn {
-    background: #23232b;
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
-    position: relative;
+    padding: 0;
 }
 
-#cartBtn:hover {
-    transform: scale(1.05);
-    background: #2d2d37;
+.cart-item-remove:hover {
+    background: #fee2e2;
+    color: #ef4444;
 }
 
-#cartCount {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #3ecf4a;
-    color: #fff;
-    font-size: 0.85em;
-    border-radius: 12px;
-    padding: 2px 8px;
-    min-width: 20px;
-    text-align: center;
-    line-height: 1.2;
-    font-weight: 600;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-/* Cart Total and Checkout */
 .cart-total {
-    padding: 16px 20px;
-    border-top: 1px solid #eee;
-    margin-top: auto;
-    background: #fff;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-}
-
-.cart-total-amount {
-    font-size: 1.2em;
-    font-weight: 600;
-    color: #23232b;
-    margin-bottom: 16px;
+    padding: 20px;
+    border-top: 1px solid #f1f1f1;
+    background: #ffffff;
+    position: sticky;
+    bottom: 0;
 }
 
 #cartBuyNowBtn {
     width: 100%;
-    background: #3ecf4a;
+    background: #1a1a1a;
     color: #fff;
-    font-size: 1.1em;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 500;
     border: none;
-    border-radius: 8px;
-    padding: 12px 0;
+    border-radius: 10px;
+    padding: 14px 0;
     cursor: pointer;
-    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
 }
 
-#cartBuyNowBtn:hover {
-    background: #35b840;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(62, 207, 74, 0.2);
-}
-
-#cartBuyNowBtn:active {
-    transform: translateY(0);
+#cartBuyNowBtn:hover:not(:disabled) {
+    background: #000000;
+    transform: translateY(-1px);
 }
 
 #cartBuyNowBtn:disabled {
-    background: #ccc;
+    background: #e5e5e5;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+    color: #999;
 }
 
-/* Mobile: Cart Modal Fullscreen */
-        @media (max-width: 900px) {
-            #cartModal {
-                width: 100vw !important;
-                max-width: 100vw !important;
-                right: 0 !important;
-                border-radius: 0 !important;
-            }
+#cartEmptyMsg {
+    text-align: center;
+    color: #666;
+    padding: 40px 20px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    font-size: 0.95rem;
+}
 
-            #cartModal.visible {
-                transform: translateX(0) !important;
-            }
+/* Cart Modal Overlay */
+#cartModalOverlay {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+}
 
-            #cartItems {
-                padding: 12px !important;
-            }
-        }
+@media (max-width: 768px) {
+    #cartModal {
+        width: 100vw;
+        border-radius: 0;
+    }
+    
+    .cart-item {
+        padding: 12px;
+    }
+    
+    .cart-item img {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .cart-header {
+        padding: 20px;
+    }
+    
+    #cartItems {
+        padding: 16px;
+    }
+    
+    .cart-total {
+        padding: 16px;
+    }
+}
+
+/* Hide disclaimer on mobile */
+@media (max-width: 768px) {
+    .product-disclaimer {
+        display: none !important;
+    }
+}
     </style>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
@@ -1103,42 +1007,42 @@
                     </div>
                     <div class="color-swatch" data-color="rgb(185, 71, 21)" style="background-color: rgb(185, 71, 21);">
                     </div>
-                    <div class="color-swatch" data-color="rgb(173, 46, 13)" style="background-color: rgb(173, 46, 13);">
+                    <div class="color-swatch" data-color="rgb(173, 46, 13)" style="background-color: rgb(173, 46, 13)">
                     </div>
-                    <div class="color-swatch" data-color="rgb(123, 34, 20)" style="background-color: rgb(123, 34, 20);">
+                    <div class="color-swatch" data-color="rgb(123, 34, 20)" style="background-color: rgb(123, 34, 20)">
                     </div>
                     <div class="color-swatch" data-color="rgb(254, 172, 150)"
-                        style="background-color: rgb(254, 172, 150);"></div>
-                    <div class="color-swatch" data-color="rgb(203, 36, 53)" style="background-color: rgb(203, 36, 53);">
+                        style="background-color: rgb(254, 172, 150)"></div>
+                    <div class="color-swatch" data-color="rgb(203, 36, 53)" style="background-color: rgb(203, 36, 53)">
                     </div>
                     <div class="color-swatch" data-color="rgb(234, 109, 51)"
-                        style="background-color: rgb(234, 109, 51);"></div>
-                    <div class="color-swatch" data-color="rgb(255, 168, 8)" style="background-color: rgb(255, 168, 8);">
+                        style="background-color: rgb(234, 109, 51)"></div>
+                    <div class="color-swatch" data-color="rgb(255, 168, 8)" style="background-color: rgb(255, 168, 8)">
                     </div>
                     <div class="color-swatch" data-color="rgb(211, 184, 166)"
-                        style="background-color: rgb(211, 184, 166);"></div>
+                        style="background-color: rgb(211, 184, 166)"></div>
                     <div class="color-swatch" data-color="rgb(254, 210, 223)"
-                        style="background-color: rgb(254, 210, 223);"></div>
+                        style="background-color: rgb(254, 210, 223)"></div>
                     <div class="color-swatch" data-color="rgb(255, 208, 34)"
-                        style="background-color: rgb(255, 208, 34);"></div>
+                        style="background-color: rgb(255, 208, 34)"></div>
                     <div class="color-swatch" data-color="rgb(255, 238, 47)"
-                        style="background-color: rgb(255, 238, 47);"></div>
+                        style="background-color: rgb(255, 238, 47)"></div>
                     <div class="color-swatch" data-color="rgb(255, 255, 155)"
-                        style="background-color: rgb(255, 255, 155);"></div>
+                        style="background-color: rgb(255, 255, 155)"></div>
                     <div class="color-swatch" data-color="rgb(252, 179, 77)"
-                        style="background-color: rgb(252, 179, 77);"></div>
+                        style="background-color: rgb(252, 179, 77)"></div>
                     <div class="color-swatch" data-color="rgb(255, 224, 123)"
-                        style="background-color: rgb(255, 224, 123);"></div>
+                        style="background-color: rgb(255, 224, 123)"></div>
                     <div class="color-swatch" data-color="rgb(255, 110, 183)"
-                        style="background-color: rgb(255, 110, 183);"></div>
-                    <div class="color-swatch" data-color="rgb(253, 76, 94)" style="background-color: rgb(253, 76, 94);">
+                        style="background-color: rgb(255, 110, 183)"></div>
+                    <div class="color-swatch" data-color="rgb(253, 76, 94)" style="background-color: rgb(253, 76, 94)">
                     </div>
                     <div class="color-swatch" data-color="rgb(222, 164, 163)"
-                        style="background-color: rgb(222, 164, 163);"></div>
+                        style="background-color: rgb(222, 164, 163)"></div>
                     <div class="color-swatch" data-color="rgb(255, 255, 227)"
-                        style="background-color: rgb(255, 255, 227);"></div>
+                        style="background-color: rgb(255, 255, 227)"></div>
                     <div class="color-swatch" data-color="rgb(113, 65, 174)"
-                        style="background-color: rgb(113, 65, 174);"></div>
+                        style="background-color: rgb(113, 65, 174)"></div>
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
@@ -1243,9 +1147,9 @@
                         style="background-color: rgb(226, 69, 218);"></div>
                     <div class="color-swatch" data-color="rgb(242, 213, 215)"
                         style="background-color: rgb(242, 213, 215);"></div>
-                    <div class="color-swatch" data-color="rgb(91, 31, 69)" style="background-color:rgb(91, 31, 69)">
+                    <div class="color-swatch" data-color="rgb(91, 31, 69)" style="background-color: rgb(91, 31, 69);">
                     </div>
-                    <div class="color-swatch" data-color="rgb(185, 71, 21)" style="background-color: rgb(185, 71, 21)">
+                    <div class="color-swatch" data-color="rgb(185, 71, 21)" style="background-color: rgb(185, 71, 21);">
                     </div>
                     <div class="color-swatch" data-color="rgb(173, 46, 13)" style="background-color: rgb(173, 46, 13)">
                     </div>
@@ -1288,10 +1192,19 @@
         </div>
         <!-- Disclaimer: 3D Model & Color Accuracy -->
         <div
+            class="product-disclaimer"
             style="max-width: 1300px; margin: 30px auto 0 auto; border-radius: 14px; color: #333; font-size: 1.05em; text-align: center;">
             <strong>Disclaimer:</strong> 3D models and colors are for reference only. Actual product colors may vary due
             to screen settings, lighting, and material differences.
         </div>
+
+        <style>
+        @media (max-width: 768px) {
+            .product-disclaimer {
+                display: none !important;
+            }
+        }
+        </style>
 
         <script type="module">
           const modelViewer1 = document.getElementById("modelViewer1");
@@ -1525,7 +1438,7 @@
             // Show loading indicator
             const submitBtn = document.getElementById('buyNowSubmitBtn');
             const loader = document.getElementById('buyNowLoader');
-            if (submitBtn && loader) {
+                                  if (submitBtn && loader) {
               submitBtn.disabled = true;
               loader.style.display = 'inline-block';
             }
@@ -1611,11 +1524,11 @@
         <div class="mainMenu d-flex align-items-center justify-content-between">
             <!-- Close Icon -->
             <div class="closeIcon">
-                <i class="ti-close" aria-hidden="true"></i>
+                               <i class="ti-close" aria-hidden="true"></i>
             </div>
             <!-- Logo Area -->
             <div class="logo-area">
-                <a href="index.html"><img class="logoImage" src="img/bg-img/Logo.png" style="max-width: 50%;"
+                <a href="index.html"><img class="logoImage" src="img/bg-img/LogoJ.png" style="max-width: 50%;"
                         alt=""></a>neshdeep Knitwear</a>
             </div>
             <!-- Nav -->
@@ -1665,7 +1578,7 @@
                         <div class="menu-area d-flex justify-content-between">
                             <!-- Logo Area  -->
                             <div class="logo-area">
-                                <a href="index.html"><img class="logoImage" src="img/bg-img/Logo.png"
+                                <a href="index.html"><img class="logoImage" src="img/bg-img/LogoJ.png"
                                         style="max-width: 50%;" alt=""></a></a>
                             </div>
 
@@ -2521,6 +2434,18 @@
             });
 
             document.addEventListener('DOMContentLoaded', function() {
+                // Prevent default link behavior and scrolling
+                document.querySelectorAll('.gallery-img').forEach(galleryImg => {
+                    galleryImg.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const imgSrc = this.dataset.img;
+                        const productTitle = this.querySelector('.gallery-content h4').textContent;
+                        openModal(imgSrc, productTitle, true);
+                        return false; // Prevent scroll
+                    });
+                });
+                
                 // Product Modal Handling
                 const modal = document.getElementById('productModal');
                 const modalImg = modal.querySelector('.modal-product-img');
@@ -2788,7 +2713,7 @@
                     }
 
                     if (cart.length === 0) {
-                        cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;" id="cartEmptyMsg">Your cart is empty.</div>';
+                        cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;margin-left:30px ;" id="cartEmptyMsg">Your cart is empty.</div>';
                         saveCart();
                         return;
                     }
@@ -2842,9 +2767,12 @@
                 }
 
                 function closeModal() {
+                    const scrollY = parseInt(document.body.style.top || '0');
                     modal.style.display = 'none';
-                    // Restore background scroll
                     document.body.classList.remove('modal-open');
+                    document.body.style.top = '';
+                    // Restore scroll position
+                    window.scrollTo(0, Math.abs(scrollY));
                 }
 
                 const qtyInput = document.getElementById('modal-qty');
@@ -2891,6 +2819,12 @@
                     alert("Your cart is empty. Please add items before placing an order.");
                     return;
                   }
+
+                  // --- Add image field for each cart item if not present ---
+                  cart = cart.map(item => ({
+                    ...item,
+                    image: item.img || item.image // ensure 'image' field is present for server
+                  }));
 
                   const buyerData = {
                     name: this.buyerName.value.trim(),
@@ -2939,7 +2873,7 @@
                       // Clear cart items display
                       const cartItemsDiv = document.getElementById('cartItems');
                       if (cartItemsDiv) {
-                        cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;" id="cartEmptyMsg">Your cart is empty.</div>';
+                        cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;margin-left:30px ;" id="cartEmptyMsg">Your cart is empty.</div>';
                       }
                       
                       // Disable buy now button
