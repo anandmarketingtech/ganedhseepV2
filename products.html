@@ -423,6 +423,15 @@
             }
 
             /* Improved Gallery Items for mobile */
+
+            .products {
+                height: 100% !important;
+                display:grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+                gap: 10px !important;
+                padding: 10px !important;
+            }
+
             .single_gallery_item {
                 padding: 10px !important;
             }
@@ -763,6 +772,116 @@
                 display: none !important;
             }
         }
+
+        /* Products Grid Layout */
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            width: 100%;
+            margin: 0 auto;
+            max-width: 1400px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sonar-portfolio {
+            padding: 0;
+            position: relative;
+            z-index: 1;
+            background: #fff;
+            margin: 0;
+            width: 100%;
+        }
+
+        .single_gallery_item {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: auto;
+            min-height: fit-content;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .single_gallery_item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gallery-img img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            display: block;
+        }
+
+        .gallery-img:hover img {
+            transform: scale(1.05);
+        }
+
+        .gallery-content {
+            padding: 15px;
+            background: #fff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .gallery-content h4 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            margin: 0;
+            justify-content: center;
+        }
+
+        /* Ensure proper spacing between sections */
+        .contact-area {
+            position: relative;
+            z-index: 2;
+            background: #fff;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .products {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 15px;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .products {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 10px;
+                padding: 10px;
+            }
+        }
     </style>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
@@ -901,9 +1020,18 @@
     <body>
         <div class="model-div">
             <div id="modelsContainer">
-                <model-viewer id="modelViewer2" src="./models/shawl.glb" ar ar-modes="webxr scene-viewer quick-look"
-                    camera-controls shadow-intensity="1" exposure="1" alt="A 3D model" disable-zoom>
-                </model-viewer>
+                <model-viewer
+                id="modelViewer2"
+                src="./models/shawl.glb"
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                camera-controls
+                shadow-intensity="1"
+                exposure="1"
+                alt="A 3D model"
+                disable-zoom
+              >
+              </model-viewer>
             </div>
 
 
@@ -1088,7 +1216,7 @@
         </div>
         <!-- Disclaimer: 3D Model & Color Accuracy -->
         <div class="product-disclaimer"
-            style="max-width: 1300px; margin: 30px auto 0 auto; border-radius: 14px; color: #333; font-size: 1.05em; text-align: center;">
+            style="max-width: 1300px; margin: auto; border-radius: 14px; color: #333; font-size: 1.05em; text-align: center;">
             <strong>Disclaimer:</strong> 3D models and colors are for reference only. Actual product colors may vary due
             to screen settings, lighting, and material differences.
         </div>
@@ -1502,752 +1630,648 @@
         <!-- ***** Header Area End ***** -->
 
         <!-- ****** Gallery Area Start ****** -->
-        <section class="sonar-projects-area" id="projects">
-            <div class="container-fluid">
+        <section class="sonar-projects-area" id="projects" style="padding-bottom: 50px; padding-top: 30px; height: 100%; min-height: 100vh; position: relative; z-index: 1;">
+            <div class="container-fluid" style="position: relative; z-index: 1;">
                 <!-- The .sonar-portfolio and .row classes are used by the theme for grid layouts and responsiveness -->
-                <div class="row sonar-portfolio">
+                <div class="row sonar-portfolio" style="position: relative; z-index: 1; margin: 0; padding: 0;">
                     <!-- Products will be loaded dynamically here by js/products.js -->
                     <div class="col-12 text-center">
                         <p>Loading products...</p>
                     </div>
                 </div>
             </div>
-
-            <div class="container">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="call-to-action-content wow fadeInUp" data-wow-delay="0.3s">
-                            <h5 class="mt-50">Let's talk</h5>
-                            <a href="contact.html" class="btn sonar-btn mt-50">contact us</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <script>
-                const swatches = document.querySelectorAll('.color-swatch');
-                const productBox = document.getElementById('product-box');
-
-                swatches.forEach(swatch => {
-                    swatch.addEventListener('click', () => {
-                        const color = swatch.getAttribute('data-color');
-                        productBox.style.backgroundColor = color;
-
-                        // Mark the active swatch
-                        swatches.forEach(s => s.classList.remove('active'));
-                        swatch.classList.add('active');
-                    });
-                });
-
-                document.addEventListener('DOMContentLoaded', function () {
-                    // Prevent default link behavior and scrolling
-                    document.querySelectorAll('.gallery-img').forEach(galleryImg => {
-                        galleryImg.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const imgSrc = this.dataset.img;
-                            const productTitle = this.querySelector('.gallery-content h4').textContent;
-                            openModal(imgSrc, productTitle, true);
-                            return false; // Prevent scroll
-                        });
-                    });
-
-                    // Product Modal Handling
-                    const modal = document.getElementById('productModal');
-                    const modalImg = modal.querySelector('.modal-product-img');
-                    const modalTitle = modal.querySelector('.modal-product-title');
-                    const modalColorGroup = document.getElementById('modal-color-group');
-                    const modalColorDropdown = document.getElementById('modal-color-dropdown');
-                    const modalColorDropdownBtn = document.getElementById('modal-color-dropdown-btn');
-                    const modalColorDropdownList = document.getElementById('modal-color-dropdown-list');
-                    const modalColorDropdownSelected = document.getElementById('modal-color-dropdown-selected');
-
-                    // Helper to get unique key for cart item (by title+img+color)
-                    function cartKey(title, img, color) {
-                        return title.trim() + '|' + img.trim() + '|' + (color || '');
-                    }
-
-                    // Gather all unique colors from color swatches on the page
-                    function getAllColors() {
-                        const swatches = document.querySelectorAll('.color-swatch');
-                        const colors = [];
-                        swatches.forEach(swatch => {
-                            const color = swatch.getAttribute('data-color');
-                            if (color && !colors.includes(color)) colors.push(color);
-                        });
-                        return colors;
-                    }
-
-                    // Remove Magnific Popup if it was initialized (defensive)
-                    if ($.fn.magnificPopup) {
-                        $('.gallery-img').off('click.magnificPopup');
-                    }
-
-                    // Handle Add to Cart button clicks
-                    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-                        btn.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation(); // Prevent scroll-to-top on button click
-                            const imgSrc = this.dataset.img;
-                            const productTitle = this.closest('.gallery-content').querySelector('h4').textContent;
-                            openModal(imgSrc, productTitle, true);
-                        });
-                    });
-
-                    // Modal close handlers
-                    modal.querySelector('.modal-close').addEventListener('click', closeModal);
-                    modal.addEventListener('click', function (e) {
-                        if (e.target === modal) closeModal();
-                    });
-
-                    // --- Modal Color Dropdown Setup ---
-                    function setupModalColors(selectedColor) {
-                        const colors = getAllColors();
-                        modalColorDropdownList.innerHTML = '';
-                        if (colors.length > 0) {
-                            colors.forEach((color, idx) => {
-                                const opt = document.createElement('div');
-                                opt.className = 'shadcn-dropdown-option' + (selectedColor && selectedColor === color ? ' active' : '');
-                                opt.setAttribute('data-color', color);
-                                opt.innerHTML = `<span class="shadcn-dropdown-swatch" style="background:${color};"></span> ${color}`;
-                                opt.addEventListener('click', function () {
-                                    setModalColor(color);
-                                    closeDropdown();
-                                });
-                                modalColorDropdownList.appendChild(opt);
-                            });
-                            modalColorGroup.style.display = '';
-                            // Set default selected
-                            setModalColor(selectedColor || colors[0]);
-                        } else {
-                            modalColorGroup.style.display = 'none';
-                        }
-                    }
-
-                    function setModalColor(color) {
-                        modalColorDropdownSelected.innerHTML = `<span class="shadcn-dropdown-swatch" style="background:${color};"></span> ${color}`;
-                        modalColorDropdownBtn.setAttribute('data-color', color);
-                        // Update modal image background
-                        modalImg.style.backgroundColor = color;
-                        // Mark active in dropdown
-                        modalColorDropdownList.querySelectorAll('.shadcn-dropdown-option').forEach(opt => {
-                            if (opt.getAttribute('data-color') === color) {
-                                opt.classList.add('active');
-                            } else {
-                                opt.classList.remove('active');
-                            }
-                        });
-                    }
-
-                    function getModalColor() {
-                        return modalColorDropdownBtn.getAttribute('data-color') || '';
-                    }
-
-                    function openDropdown() {
-                        modalColorDropdownList.style.display = 'block';
-                        modalColorDropdownBtn.setAttribute('aria-expanded', 'true');
-                    }
-
-                    function closeDropdown() {
-                        modalColorDropdownList.style.display = 'none';
-                        modalColorDropdownBtn.setAttribute('aria-expanded', 'false');
-                    }
-
-                    modalColorDropdownBtn.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        if (modalColorDropdownList.style.display === 'block') {
-                            closeDropdown();
-                        } else {
-                            openDropdown();
-                        }
-                    });
-
-                    document.addEventListener('click', function () {
-                        closeDropdown();
-                    });
-
-                    modalColorDropdownList.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                    });
-
-                    // Modal Add to Cart
-                    document.querySelector('.modal-add-to-cart').addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation(); // Prevent scroll-to-top on modal button click
-                        const imgSrc = modalImg.src;
-                        const productTitle = modalTitle.textContent;
-                        const qty = parseInt(document.getElementById('modal-qty').value, 10) || 1;
-                        const color = getModalColor();
-                        addToCart({ title: productTitle, img: imgSrc, qty, color });
-                        closeModal();
-                    });
-
-                    // Modal Buy Now (optional: can be extended to use color)
-                    document.querySelector('.modal-buy-now').addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation(); // Prevent scroll-to-top on modal button click
-                        const imgSrc = modalImg.src;
-                        const productTitle = modalTitle.textContent;
-                        const qty = parseInt(document.getElementById('modal-qty').value, 10) || 1;
-                        const color = getModalColor();
-                        addToCart({ title: productTitle, img: imgSrc, qty, color });
-                        closeModal();
-                        document.getElementById('cartModal').style.display = 'block';
-                        document.getElementById('buyNowModal').style.display = 'flex';
-                    });
-
-                    // --- Cart Logic ---
-                    const cartBtn = document.getElementById('cartBtn');
-                    const cartModal = document.getElementById('cartModal');
-                    const cartModalOverlay = document.getElementById('cartModalOverlay');
-                    const closeCartModal = document.getElementById('closeCartModal');
-                    const cartItemsDiv = document.getElementById('cartItems');
-                    const cartCount = document.getElementById('cartCount');
-                    const cartEmptyMsg = document.getElementById('cartEmptyMsg');
-                    let cart = [];
-
-                    // --- Cart Persistence (localStorage) ---
-                    // Load cart from localStorage on page load
-                    function loadCart() {
-                        try {
-                            const saved = localStorage.getItem('knitwear_cart');
-                            if (saved) {
-                                cart = JSON.parse(saved);
-                            }
-                        } catch (e) {
-                            cart = [];
-                        }
-                    }
-                    // Save cart to localStorage whenever it changes
-                    function saveCart() {
-                        localStorage.setItem('knitwear_cart', JSON.stringify(cart));
-                    }
-
-                    // Call loadCart on startup
-                    loadCart();
-
-                    // Show/hide cart modal with animation
-                    function showCartModal() {
-                        cartModal.style.display = 'block';
-                        cartModalOverlay.style.display = 'block';
-                        cartModal.classList.add('visible');
-                        setTimeout(() => {
-                            cartModal.style.transform = 'translateX(0)';
-                            cartModal.style.opacity = '1';
-                            cartModalOverlay.style.opacity = '1';
-                        }, 10);
-                    }
-                    function hideCartModal() {
-                        cartModal.style.transform = 'translateX(100%)';
-                        cartModal.style.opacity = '0';
-                        cartModalOverlay.style.opacity = '0';
-                        cartModal.classList.remove('visible');
-                        setTimeout(() => {
-                            cartModal.style.display = 'none';
-                            cartModalOverlay.style.display = 'none';
-                        }, 300);
-                    }
-
-                    cartBtn.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showCartModal();
-                    });
-
-                    // Add touch event handling for mobile
-                    cartBtn.addEventListener('touchstart', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showCartModal();
-                    }, { passive: false });
-
-                    closeCartModal.addEventListener('click', function () {
-                        hideCartModal();
-                    });
-                    cartModalOverlay.addEventListener('click', function () {
-                        hideCartModal();
-                    });
-                    document.addEventListener('keydown', function (e) {
-                        if (cartModal.style.display === 'block' && (e.key === 'Escape' || e.keyCode === 27)) {
-                            hideCartModal();
-                        }
-                    });
-                    cartModal.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                    });
-
-                    function addToCart(item) {
-                        const key = cartKey(item.title, item.img, item.color);
-                        const idx = cart.findIndex(i => cartKey(i.title, i.img, i.color) === key);
-                        if (idx > -1) {
-                            cart[idx].qty += item.qty;
-                        } else {
-                            cart.push({ ...item });
-                        }
-                        updateCartUI();
-                        saveCart();
-                    }
-
-                    function updateCartUI() {
-                        // Make sure cart is defined
-                        if (typeof cart === 'undefined' || cart === null) {
-                            cart = [];
-                        }
-
-                        // Double check localStorage hasn't been changed
-                        const storedCart = localStorage.getItem('knitwear_cart');
-                        if (storedCart === null) {
-                            cart = [];
-                        }
-
-                        let totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
-                        cartCount.textContent = totalQty;
-                        cartCount.style.display = totalQty > 0 ? 'block' : 'none';
-
-                        // Update Buy Now button state
-                        const cartBuyNowBtn = document.getElementById('cartBuyNowBtn');
-                        if (cartBuyNowBtn) {
-                            if (cart.length === 0) {
-                                cartBuyNowBtn.disabled = true;
-                                cartBuyNowBtn.style.opacity = '0.5';
-                                cartBuyNowBtn.style.cursor = 'not-allowed';
-                            } else {
-                                cartBuyNowBtn.disabled = false;
-                                cartBuyNowBtn.style.opacity = '1';
-                                cartBuyNowBtn.style.cursor = 'pointer';
-                            }
-                        }
-
-                        if (cart.length === 0) {
-                            cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;margin-left:30px ;" id="cartEmptyMsg">Your cart is empty.</div>';
-                            saveCart();
-                            return;
-                        }
-                        cartItemsDiv.innerHTML = '';
-                        cart.forEach((item, idx) => {
-                            const div = document.createElement('div');
-                            div.style = 'display:flex;align-items:center;margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:10px;';
-                            div.innerHTML = `
-                            <img src="${item.img}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px;margin-right:12px;background:#f2f2f2;">
-                            <div style="flex:1;">
-                                <div style="font-weight:600;font-size:1em;">${item.title}</div>
-                                <div style="font-size:0.97em;color:#555;">Qty: ${item.qty}</div>
-                                ${item.color ? `<div style="font-size:0.95em;color:#888;">Color: <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${item.color};border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>${item.color}</div>` : ''}
-                            </div>
-                            <button data-idx="${idx}" style="background:none;border:none;color:#e74c3c;font-size:1.2em;cursor:pointer;margin-right:16px;" title="Remove">&times;</button>
-                        `;
-                            cartItemsDiv.appendChild(div);
-                        });
-                        cartItemsDiv.querySelectorAll('button[data-idx]').forEach(btn => {
-                            btn.addEventListener('click', function () {
-                                const idx = parseInt(this.getAttribute('data-idx'), 10);
-                                cart.splice(idx, 1);
-                                updateCartUI();
-                                saveCart();
-                            });
-                        });
-                        saveCart();
-                    }
-
-                    // After loading cart, update UI
-                    updateCartUI();
-
-                    // --- Modal Open/Close Logic ---
-                    function openModal(imgSrc, title, fromGallery = false) {
-                        const qtyInput = document.getElementById('modal-qty');
-                        modalImg.src = imgSrc;
-                        modalTitle.textContent = title;
-                        qtyInput.value = 1;
-                        // Setup color dropdown
-                        setupModalColors();
-                        // Set default color and update image background
-                        // (handled in setupModalColors)
-                        const fallback = modal.querySelector('.modal-img-fallback');
-                        if (fallback) fallback.remove();
-                        const preloader = document.querySelector('.mfp-preloader');
-                        if (preloader) preloader.remove();
-                        modalImg.style.display = '';
-                        modal.style.display = 'flex';
-                        // Prevent background scroll
-                        document.body.classList.add('modal-open');
-                    }
-
-                    function closeModal() {
-                        const scrollY = parseInt(document.body.style.top || '0');
-                        modal.style.display = 'none';
-                        document.body.classList.remove('modal-open');
-                        document.body.style.top = '';
-                        // Restore scroll position
-                        window.scrollTo(0, Math.abs(scrollY));
-                    }
-
-                    const qtyInput = document.getElementById('modal-qty');
-                    const qtyBtns = document.querySelectorAll('.modal-qty-btn');
-                    qtyBtns[0].addEventListener('click', function () {
-                        let val = parseInt(qtyInput.value, 10) || 1;
-                        if (val > 1) qtyInput.value = val - 1;
-                    });
-                    qtyBtns[1].addEventListener('click', function () {
-                        let val = parseInt(qtyInput.value, 10) || 1;
-                        qtyInput.value = val + 1;
-                    });
-                    qtyInput.addEventListener('input', function () {
-                        if (this.value < 1) this.value = 1;
-                    });
-
-                    // Add Buy Now button logic for cart
-                    document.getElementById('cartBuyNowBtn').addEventListener('click', function () {
-                        // Only open modal if cart has items
-                        if (cart.length === 0) {
-                            alert("Your cart is empty. Please add items before placing an order.");
-                            return;
-                        }
-                        document.getElementById('buyNowModal').style.display = 'flex';
-                    });
-
-                    // Buy Now Modal logic
-                    document.getElementById('closeBuyNowModal').addEventListener('click', function () {
-                        document.getElementById('buyNowModal').style.display = 'none';
-                    });
-                    document.getElementById('buyNowModal').addEventListener('click', function (e) {
-                        if (e.target === this) this.style.display = 'none';
-                    });
-
-                    // --- Clear cart on Buy Now Submit ---
-                    document.getElementById('buyNowForm').addEventListener('submit', function (e) {
-                        e.preventDefault();
-                        console.log('buyNowForm submit event triggered'); // Debug: Submit triggered
-
-                        let cart = JSON.parse(localStorage.getItem('knitwear_cart') || '[]');
-
-                        // Prevent submission if cart is empty
-                        if (!cart || cart.length === 0) {
-                            alert("Your cart is empty. Please add items before placing an order.");
-                            return;
-                        }
-
-                        // --- Add image field for each cart item if not present ---
-                        cart = cart.map(item => ({
-                            ...item,
-                            image: item.img || item.image // ensure 'image' field is present for server
-                        }));
-
-                        const buyerData = {
-                            name: this.buyerName.value.trim(),
-                            email: this.buyerEmail.value.trim(),
-                            phone: this.buyerPhone.value.trim(),
-                            address: this.buyerAddress.value.trim(),
-                            cart: cart
-                        };
-                        console.log('Sending order data:', buyerData); // Debug log
-
-                        if (!buyerData.name || !buyerData.email || !buyerData.phone || !buyerData.address) {
-                            alert("Please fill out all required fields.");
-                            return;
-                        }
-
-                        // Show loading indicator
-                        const submitBtn = document.getElementById('buyNowSubmitBtn');
-                        const loader = document.getElementById('buyNowLoader');
-                        if (submitBtn && loader) {
-                            submitBtn.disabled = true;
-                            loader.style.display = 'inline-block';
-                        }
-
-                        fetch('http://localhost:3001/send-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(buyerData)
-                        })
-                            .then(res => {
-                                // Log response status for debugging
-                                console.log('Response status:', res.status);
-                                return res.json();
-                            })
-                            .then(data => {
-                                console.log('Response data:', data); // Log the complete response for debugging
-                                if (data && data.success) {
-                                    // Clear cart properly with multiple approaches for redundancy
-                                    localStorage.removeItem('knitwear_cart');
-                                    cart = [];
-                                    window.cart = [];
-
-                                    // Reset cart count and update cart UI
-                                    document.getElementById('cartCount').textContent = '0';
-                                    document.getElementById('cartCount').style.display = 'none';
-
-                                    // Clear cart items display
-                                    const cartItemsDiv = document.getElementById('cartItems');
-                                    if (cartItemsDiv) {
-                                        cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;margin-left:30px ;" id="cartEmptyMsg">Your cart is empty.</div>';
-                                    }
-
-                                    // Disable buy now button
-                                    const cartBuyNowBtn = document.getElementById('cartBuyNowBtn');
-                                    if (cartBuyNowBtn) {
-                                        cartBuyNowBtn.disabled = true;
-                                        cartBuyNowBtn.style.opacity = '0.5';
-                                        cartBuyNowBtn.style.cursor = 'not-allowed';
-                                    }
-
-                                    updateCartUI(); // Update UI to reflect empty cart
-                                    // Ensure the cart is really empty
-                                    setTimeout(() => {
-                                        localStorage.removeItem('knitwear_cart');
-                                        updateCartUI();
-                                    }, 100);
-
-                                    alert("Thank you! Your order has been submitted.");
-                                    buyNowForm.reset();
-                                    document.getElementById('buyNowModal').style.display = 'none';
-                                    hideCartModal(); // Make sure to close the cart modal too
-                                } else {
-                                    alert(data?.message || "Failed to send order. Please try again.");
-                                }
-                            })
-                            .catch(function (error) {
-                                console.error("Email sending failed:", error);
-                                alert("Failed to send order. Please try again. Error: " + error.message);
-                            })
-                            .finally(() => {
-                                // Hide loading indicator
-                                if (submitBtn && loader) {
-                                    submitBtn.disabled = false;
-                                    loader.style.display = 'none';
-                                }
-                            });
-                    });
-                });
-            </script>
-
-            </div>
         </section>
-        <!-- ****** Gallery Area End ****** -->
 
-        <!-- Modal HTML -->
-        <div id="productModal"
-            style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
-            <div
-                style="background:#fff; border-radius:8px; max-width:950px; width:90vw; display:flex; flex-direction:row; overflow:hidden; position:relative;">
-                <span class="modal-close"
-                    style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer;">&times;</span>
-                <div style="flex:1; display:flex; align-items:center; justify-content:center; margin-left:5%">
-                    <img class="modal-product-img" src="" alt="Product"
-                        style="max-width:300px; max-height:400px; border-radius:8px; background:transparent; transition:background 0.3s;">
-                </div>
-                <div style="flex:1; padding:32px 24px; display:flex; flex-direction:column; justify-content:center;">
-                    <h3 class="modal-product-title" style="margin-bottom:16px;"></h3>
-                    <!-- Color Dropdown (conditional, shadcn style) -->
-                    <div id="modal-color-group" style="margin-bottom:16px; display:none;">
-                        <strong>Choose Color:</strong>
-                        <div id="modal-color-dropdown" class="shadcn-dropdown">
-                            <button id="modal-color-dropdown-btn" class="shadcn-dropdown-btn" type="button">
-                                <span id="modal-color-dropdown-selected" class="shadcn-dropdown-selected"></span>
-                                <svg width="18" height="18" style="margin-left:8px;" viewBox="0 0 20 20">
-                                    <path d="M7 7l3 3 3-3" stroke="#333" stroke-width="2" fill="none"
-                                        fill-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <div id="modal-color-dropdown-list" class="shadcn-dropdown-list" style="display:none;">
-                            </div>
+        <style>
+            /* Products Grid Layout */
+            .products {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+                padding: 20px;
+                width: 100%;
+                margin: 0 auto;
+                max-width: 1400px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .sonar-portfolio {
+                padding: 0;
+                position: relative;
+                z-index: 1;
+                background: #fff;
+                margin: 0;
+                width: 100%;
+            }
+
+            .single_gallery_item {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+                height: auto;
+                min-height: fit-content;
+                background: #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Rest of your existing styles... */
+        </style>
+
+        <script type="module">
+            const swatches = document.querySelectorAll('.color-swatch');
+            const productBox = document.getElementById('product-box');
+
+            swatches.forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    const color = swatch.getAttribute('data-color');
+                    productBox.style.backgroundColor = color;
+
+                    // Mark the active swatch
+                    swatches.forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Prevent default link behavior and scrolling
+                document.querySelectorAll('.gallery-img').forEach(galleryImg => {
+                    galleryImg.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const imgSrc = this.dataset.img;
+                        const productTitle = this.querySelector('.gallery-content h4').textContent;
+                        openModal(imgSrc, productTitle, true);
+                        return false; // Prevent scroll
+                    });
+                });
+
+                // Product Modal Handling
+                const modal = document.getElementById('productModal');
+                const modalImg = modal.querySelector('.modal-product-img');
+                const modalTitle = modal.querySelector('.modal-product-title');
+                const modalColorGroup = document.getElementById('modal-color-group');
+                const modalColorDropdown = document.getElementById('modal-color-dropdown');
+                const modalColorDropdownBtn = document.getElementById('modal-color-dropdown-btn');
+                const modalColorDropdownList = document.getElementById('modal-color-dropdown-list');
+                const modalColorDropdownSelected = document.getElementById('modal-color-dropdown-selected');
+
+                // Helper to get unique key for cart item (by title+img+color)
+                function cartKey(title, img, color) {
+                    return title.trim() + '|' + img.trim() + '|' + (color || '');
+                }
+
+                // Gather all unique colors from color swatches on the page
+                function getAllColors() {
+                    const swatches = document.querySelectorAll('.color-swatch');
+                    const colors = [];
+                    swatches.forEach(swatch => {
+                        const color = swatch.getAttribute('data-color');
+                        if (color && !colors.includes(color)) colors.push(color);
+                    });
+                    return colors;
+                }
+
+                // Remove Magnific Popup if it was initialized (defensive)
+                if ($.fn.magnificPopup) {
+                    $('.gallery-img').off('click.magnificPopup');
+                }
+
+                // Handle Add to Cart button clicks
+                document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation(); // Prevent scroll-to-top on button click
+                        const imgSrc = this.dataset.img;
+                        const productTitle = this.closest('.gallery-content').querySelector('h4').textContent;
+                        openModal(imgSrc, productTitle, true);
+                    });
+                });
+
+                // Modal close handlers
+                modal.querySelector('.modal-close').addEventListener('click', closeModal);
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) closeModal();
+                });
+
+                // --- Modal Color Dropdown Setup ---
+                function setupModalColors(selectedColor) {
+                    const colors = getAllColors();
+                    modalColorDropdownList.innerHTML = '';
+                    if (colors.length > 0) {
+                        colors.forEach((color, idx) => {
+                            const opt = document.createElement('div');
+                            opt.className = 'shadcn-dropdown-option' + (selectedColor && selectedColor === color ? ' active' : '');
+                            opt.setAttribute('data-color', color);
+                            opt.innerHTML = `<span class="shadcn-dropdown-swatch" style="background:${color};"></span> ${color}`;
+                            opt.addEventListener('click', function () {
+                                setModalColor(color);
+                                closeDropdown();
+                            });
+                            modalColorDropdownList.appendChild(opt);
+                        });
+                        modalColorGroup.style.display = '';
+                        // Set default selected
+                        setModalColor(selectedColor || colors[0]);
+                    } else {
+                        modalColorGroup.style.display = 'none';
+                    }
+                }
+
+                function setModalColor(color) {
+                    modalColorDropdownSelected.innerHTML = `<span class="shadcn-dropdown-swatch" style="background:${color};"></span> ${color}`;
+                    modalColorDropdownBtn.setAttribute('data-color', color);
+                    // Update modal image background
+                    modalImg.style.backgroundColor = color;
+                    // Mark active in dropdown
+                    modalColorDropdownList.querySelectorAll('.shadcn-dropdown-option').forEach(opt => {
+                        if (opt.getAttribute('data-color') === color) {
+                            opt.classList.add('active');
+                        } else {
+                            opt.classList.remove('active');
+                        }
+                    });
+                }
+
+                function getModalColor() {
+                    return modalColorDropdownBtn.getAttribute('data-color') || '';
+                }
+
+                function openDropdown() {
+                    modalColorDropdownList.style.display = 'block';
+                    modalColorDropdownBtn.setAttribute('aria-expanded', 'true');
+                }
+
+                function closeDropdown() {
+                    modalColorDropdownList.style.display = 'none';
+                    modalColorDropdownBtn.setAttribute('aria-expanded', 'false');
+                }
+
+                modalColorDropdownBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (modalColorDropdownList.style.display === 'block') {
+                        closeDropdown();
+                    } else {
+                        openDropdown();
+                    }
+                });
+
+                document.addEventListener('click', function () {
+                    closeDropdown();
+                });
+
+                modalColorDropdownList.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+
+                // Modal Add to Cart
+                document.querySelector('.modal-add-to-cart').addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent scroll-to-top on modal button click
+                    const imgSrc = modalImg.src;
+                    const productTitle = modalTitle.textContent;
+                    const qty = parseInt(document.getElementById('modal-qty').value, 10) || 1;
+                    const color = getModalColor();
+                    addToCart({ title: productTitle, img: imgSrc, qty, color });
+                    closeModal();
+                });
+
+                // Modal Buy Now (optional: can be extended to use color)
+                document.querySelector('.modal-buy-now').addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent scroll-to-top on modal button click
+                    const imgSrc = modalImg.src;
+                    const productTitle = modalTitle.textContent;
+                    const qty = parseInt(document.getElementById('modal-qty').value, 10) || 1;
+                    const color = getModalColor();
+                    addToCart({ title: productTitle, img: imgSrc, qty, color });
+                    closeModal();
+                    document.getElementById('cartModal').style.display = 'block';
+                    document.getElementById('buyNowModal').style.display = 'flex';
+                });
+
+                // --- Cart Logic ---
+                const cartBtn = document.getElementById('cartBtn');
+                const cartModal = document.getElementById('cartModal');
+                const cartModalOverlay = document.getElementById('cartModalOverlay');
+                const closeCartModal = document.getElementById('closeCartModal');
+                const cartItemsDiv = document.getElementById('cartItems');
+                const cartCount = document.getElementById('cartCount');
+                const cartEmptyMsg = document.getElementById('cartEmptyMsg');
+                let cart = [];
+
+                // --- Cart Persistence (localStorage) ---
+                // Load cart from localStorage on page load
+                function loadCart() {
+                    try {
+                        const saved = localStorage.getItem('knitwear_cart');
+                        if (saved) {
+                            cart = JSON.parse(saved);
+                        }
+                    } catch (e) {
+                        cart = [];
+                    }
+                }
+                // Save cart to localStorage whenever it changes
+                function saveCart() {
+                    localStorage.setItem('knitwear_cart', JSON.stringify(cart));
+                }
+
+                // Call loadCart on startup
+                loadCart();
+
+                // Show/hide cart modal with animation
+                function showCartModal() {
+                    cartModal.style.display = 'block';
+                    cartModalOverlay.style.display = 'block';
+                    cartModal.classList.add('visible');
+                    setTimeout(() => {
+                        cartModal.style.transform = 'translateX(0)';
+                        cartModal.style.opacity = '1';
+                        cartModalOverlay.style.opacity = '1';
+                    }, 10);
+                }
+                function hideCartModal() {
+                    cartModal.style.transform = 'translateX(100%)';
+                    cartModal.style.opacity = '0';
+                    cartModalOverlay.style.opacity = '0';
+                    cartModal.classList.remove('visible');
+                    setTimeout(() => {
+                        cartModal.style.display = 'none';
+                        cartModalOverlay.style.display = 'none';
+                    }, 300);
+                }
+
+                cartBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showCartModal();
+                });
+
+                // Add touch event handling for mobile
+                cartBtn.addEventListener('touchstart', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showCartModal();
+                }, { passive: false });
+
+                closeCartModal.addEventListener('click', function () {
+                    hideCartModal();
+                });
+                cartModalOverlay.addEventListener('click', function () {
+                    hideCartModal();
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (cartModal.style.display === 'block' && (e.key === 'Escape' || e.keyCode === 27)) {
+                        hideCartModal();
+                    }
+                });
+                cartModal.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+
+                function addToCart(item) {
+                    const key = cartKey(item.title, item.img, item.color);
+                    const idx = cart.findIndex(i => cartKey(i.title, i.img, i.color) === key);
+                    if (idx > -1) {
+                        cart[idx].qty += item.qty;
+                    } else {
+                        cart.push({ ...item });
+                    }
+                    updateCartUI();
+                    saveCart();
+                }
+
+                function updateCartUI() {
+                    // Make sure cart is defined
+                    if (typeof cart === 'undefined' || cart === null) {
+                        cart = [];
+                    }
+
+                    // Double check localStorage hasn't been changed
+                    const storedCart = localStorage.getItem('knitwear_cart');
+                    if (storedCart === null) {
+                        cart = [];
+                    }
+
+                    let totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+                    cartCount.textContent = totalQty;
+                    cartCount.style.display = totalQty > 0 ? 'block' : 'none';
+
+                    // Update Buy Now button state
+                    const cartBuyNowBtn = document.getElementById('cartBuyNowBtn');
+                    if (cartBuyNowBtn) {
+                        if (cart.length === 0) {
+                            cartBuyNowBtn.disabled = true;
+                            cartBuyNowBtn.style.opacity = '0.5';
+                            cartBuyNowBtn.style.cursor = 'not-allowed';
+                        } else {
+                            cartBuyNowBtn.disabled = false;
+                            cartBuyNowBtn.style.opacity = '1';
+                            cartBuyNowBtn.style.cursor = 'pointer';
+                        }
+                    }
+
+                    if (cart.length === 0) {
+                        cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;margin-left:30px ;" id="cartEmptyMsg">Your cart is empty.</div>';
+                        saveCart();
+                        return;
+                    }
+                    cartItemsDiv.innerHTML = '';
+                    cart.forEach((item, idx) => {
+                        const div = document.createElement('div');
+                        div.style = 'display:flex;align-items:center;margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:10px;';
+                        div.innerHTML = `
+                        <img src="${item.img}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:8px;margin-right:12px;background:#f2f2f2;">
+                        <div style="flex:1;">
+                            <div style="font-weight:600;font-size:1em;">${item.title}</div>
+                            <div style="font-size:0.97em;color:#555;">Qty: ${item.qty}</div>
+                            ${item.color ? `<div style="font-size:0.95em;color:#888;">Color: <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${item.color};border:1px solid #ccc;vertical-align:middle;margin-right:4px;"></span>${item.color}</div>` : ''}
                         </div>
-                    </div>
-                    <!-- Quantity Selector -->
-                    <div class="modal-qty-group"
-                        style="margin-bottom:18px; display:flex; align-items:center; gap:10px;">
-                        <label for="modal-qty" style="font-weight:500;">Quantity:</label>
-                        <div class="modal-qty-wrapper" style="display:flex; align-items:center; gap:0;">
-                            <button type="button" class="modal-qty-btn"
-                                style="width:32px; height:32px; border:none; background:#f2f2f2; font-size:1.2em; border-radius:6px 0 0 6px; cursor:pointer;">-</button>
-                            <input id="modal-qty" class="modal-qty-input" type="number" min="1" value="1"
-                                style="width:48px; text-align:center; border:1px solid #ddd; border-left:none; border-right:none; height:32px; font-size:1em;">
-                            <button type="button" class="modal-qty-btn"
-                                style="width:32px; height:32px; border:none; background:#f2f2f2; font-size:1.2em; border-radius:0 6px 6px 0; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:12px;">
-                        <button class="modal-add-to-cart btn btn-primary">
-                            <span class="cart-icon">🛒</span>Add to Cart
+                        <button data-idx="${idx}" style="background:none;border:none;color:#e74c3c;font-size:1.2em;cursor:pointer;margin-right:16px;" title="Remove">&times;</button>
+                    `;
+                        cartItemsDiv.appendChild(div);
+                    });
+                    cartItemsDiv.querySelectorAll('button[data-idx]').forEach(btn => {
+                        btn.addEventListener('click', function () {
+                            const idx = parseInt(this.getAttribute('data-idx'), 10);
+                            cart.splice(idx, 1);
+                            updateCartUI();
+                            saveCart();
+                        });
+                    });
+                    saveCart();
+                }
+
+                // After loading cart, update UI
+                updateCartUI();
+
+                // --- Modal Open/Close Logic ---
+                function openModal(imgSrc, title, fromGallery = false) {
+                    const qtyInput = document.getElementById('modal-qty');
+                    modalImg.src = imgSrc;
+                    modalTitle.textContent = title;
+                    qtyInput.value = 1;
+                    // Setup color dropdown
+                    setupModalColors();
+                    // Set default color and update image background
+                    // (handled in setupModalColors)
+                    const fallback = modal.querySelector('.modal-img-fallback');
+                    if (fallback) fallback.remove();
+                    const preloader = document.querySelector('.mfp-preloader');
+                    if (preloader) preloader.remove();
+                    modalImg.style.display = '';
+                    modal.style.display = 'flex';
+                    // Prevent background scroll
+                    document.body.classList.add('modal-open');
+                }
+
+                function closeModal() {
+                    const scrollY = parseInt(document.body.style.top || '0');
+                    modal.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    document.body.style.top = '';
+                    // Restore scroll position
+                    window.scrollTo(0, Math.abs(scrollY));
+                }
+
+                const qtyInput = document.getElementById('modal-qty');
+                const qtyBtns = document.querySelectorAll('.modal-qty-btn');
+                qtyBtns[0].addEventListener('click', function () {
+                    let val = parseInt(qtyInput.value, 10) || 1;
+                    if (val > 1) qtyInput.value = val - 1;
+                });
+                qtyBtns[1].addEventListener('click', function () {
+                    let val = parseInt(qtyInput.value, 10) || 1;
+                    qtyInput.value = val + 1;
+                });
+                qtyInput.addEventListener('input', function () {
+                    if (this.value < 1) this.value = 1;
+                });
+
+                // Add Buy Now button logic for cart
+                document.getElementById('cartBuyNowBtn').addEventListener('click', function () {
+                    // Only open modal if cart has items
+                    if (cart.length === 0) {
+                        alert("Your cart is empty. Please add items before placing an order.");
+                        return;
+                    }
+                    document.getElementById('buyNowModal').style.display = 'flex';
+                });
+
+                // Buy Now Modal logic
+                document.getElementById('closeBuyNowModal').addEventListener('click', function () {
+                    document.getElementById('buyNowModal').style.display = 'none';
+                });
+                document.getElementById('buyNowModal').addEventListener('click', function (e) {
+                    if (e.target === this) this.style.display = 'none';
+                });
+
+                // --- Clear cart on Buy Now Submit ---
+                document.getElementById('buyNowForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    console.log('buyNowForm submit event triggered'); // Debug: Submit triggered
+
+                    let cart = JSON.parse(localStorage.getItem('knitwear_cart') || '[]');
+
+                    // Prevent submission if cart is empty
+                    if (!cart || cart.length === 0) {
+                        alert("Your cart is empty. Please add items before placing an order.");
+                        return;
+                    }
+
+                    // --- Add image field for each cart item if not present ---
+                    cart = cart.map(item => ({
+                        ...item,
+                        image: item.img || item.image // ensure 'image' field is present for server
+                    }));
+
+                    const buyerData = {
+                        name: this.buyerName.value.trim(),
+                        email: this.buyerEmail.value.trim(),
+                        phone: this.buyerPhone.value.trim(),
+                        address: this.buyerAddress.value.trim(),
+                        cart: cart
+                    };
+                    console.log('Sending order data:', buyerData); // Debug log
+
+                    if (!buyerData.name || !buyerData.email || !buyerData.phone || !buyerData.address) {
+                        alert("Please fill out all required fields.");
+                        return;
+                    }
+
+                    // Show loading indicator
+                    const submitBtn = document.getElementById('buyNowSubmitBtn');
+                    const loader = document.getElementById('buyNowLoader');
+                    if (submitBtn && loader) {
+                        submitBtn.disabled = true;
+                        loader.style.display = 'inline-block';
+                    }
+
+                    fetch('http://localhost:3001/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(buyerData)
+                    })
+                        .then(res => {
+                            // Log response status for debugging
+                            console.log('Response status:', res.status);
+                            return res.json();
+                        })
+                        .then(data => {
+                            console.log('Response data:', data); // Log the complete response for debugging
+                            if (data && data.success) {
+                                // Clear cart properly with multiple approaches for redundancy
+                                localStorage.removeItem('knitwear_cart');
+                                cart = [];
+                                window.cart = [];
+
+                                // Reset cart count and update cart UI
+                                document.getElementById('cartCount').textContent = '0';
+                                document.getElementById('cartCount').style.display = 'none';
+
+                                // Clear cart items display
+                                const cartItemsDiv = document.getElementById('cartItems');
+                                if (cartItemsDiv) {
+                                    cartItemsDiv.innerHTML = '<div style="color:#888;text-align:center;margin-top:30px;margin-left:30px ;" id="cartEmptyMsg">Your cart is empty.</div>';
+                                }
+
+                                // Disable buy now button
+                                const cartBuyNowBtn = document.getElementById('cartBuyNowBtn');
+                                if (cartBuyNowBtn) {
+                                    cartBuyNowBtn.disabled = true;
+                                    cartBuyNowBtn.style.opacity = '0.5';
+                                    cartBuyNowBtn.style.cursor = 'not-allowed';
+                                }
+
+                                updateCartUI(); // Update UI to reflect empty cart
+                                // Ensure the cart is really empty
+                                setTimeout(() => {
+                                    localStorage.removeItem('knitwear_cart');
+                                    updateCartUI();
+                                }, 100);
+
+                                alert("Thank you! Your order has been submitted.");
+                                buyNowForm.reset();
+                                document.getElementById('buyNowModal').style.display = 'none';
+                                hideCartModal(); // Make sure to close the cart modal too
+                            } else {
+                                alert(data?.message || "Failed to send order. Please try again.");
+                            }
+                        })
+                        .catch(function (error) {
+                            console.error("Email sending failed:", error);
+                            alert("Failed to send order. Please try again. Error: " + error.message);
+                        })
+                        .finally(() => {
+                            // Hide loading indicator
+                            if (submitBtn && loader) {
+                                submitBtn.disabled = false;
+                                loader.style.display = 'none';
+                            }
+                        });
+                });
+            });
+        </script>
+
+        </div>
+    </section>
+    <!-- ****** Gallery Area End ****** -->
+
+    <!-- Modal HTML -->
+    <div id="productModal"
+        style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
+        <div
+            style="background:#fff; border-radius:8px; max-width:950px; width:90vw; display:flex; flex-direction:row; overflow:hidden; position:relative;">
+            <span class="modal-close"
+                style="position:absolute; top:10px; right:20px; font-size:2rem; cursor:pointer;">&times;</span>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; margin-left:5%">
+                <img class="modal-product-img" src="" alt="Product"
+                    style="max-width:300px; max-height:400px; border-radius:8px; background:transparent; transition:background 0.3s;">
+            </div>
+            <div style="flex:1; padding:32px 24px; display:flex; flex-direction:column; justify-content:center;">
+                <h3 class="modal-product-title" style="margin-bottom:16px;"></h3>
+                <!-- Color Dropdown (conditional, shadcn style) -->
+                <div id="modal-color-group" style="margin-bottom:16px; display:none;">
+                    <strong>Choose Color:</strong>
+                    <div id="modal-color-dropdown" class="shadcn-dropdown">
+                        <button id="modal-color-dropdown-btn" class="shadcn-dropdown-btn" type="button">
+                            <span id="modal-color-dropdown-selected" class="shadcn-dropdown-selected"></span>
+                            <svg width="18" height="18" style="margin-left:8px;" viewBox="0 0 20 20">
+                                <path d="M7 7l3 3 3-3" stroke="#333" stroke-width="2" fill="none"
+                                    fill-rule="evenodd" />
+                            </svg>
                         </button>
-                        <button class="modal-buy-now btn btn-success">Buy Now</button>
+                        <div id="modal-color-dropdown-list" class="shadcn-dropdown-list" style="display:none;">
+                        </div>
                     </div>
+                </div>
+                <!-- Quantity Selector -->
+                <div class="modal-qty-group"
+                    style="margin-bottom:18px; display:flex; align-items:center; gap:10px;">
+                    <label for="modal-qty" style="font-weight:500;">Quantity:</label>
+                    <div class="modal-qty-wrapper" style="display:flex; align-items:center; gap:0;">
+                        <button type="button" class="modal-qty-btn"
+                            style="width:32px; height:32px; border:none; background:#f2f2f2; font-size:1.2em; border-radius:6px 0 0 6px; cursor:pointer;">-</button>
+                        <input id="modal-qty" class="modal-qty-input" type="number" min="1" value="1"
+                            style="width:48px; text-align:center; border:1px solid #ddd; border-left:none; border-right:none; height:32px; font-size:1em;">
+                        <button type="button" class="modal-qty-btn"
+                            style="width:32px; height:32px; border:none; background:#f2f2f2; font-size:1.2em; border-radius:0 6px 6px 0; cursor:pointer;">+</button>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <button class="modal-add-to-cart btn btn-primary">
+                        <span class="cart-icon">🛒</span>Add to Cart
+                    </button>
+                    <button class="modal-buy-now btn btn-success">Buy Now</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- ***** Footer Area Start ***** -->
-        <footer class="footer-area">
-            <!-- back end content -->
-            <div class="backEnd-content">
-                <img class="dots" src="img/core-img/dots.png" alt="">
-                <h2>Dream</h2>
-            </div>
+    <!-- ***** Footer Area Start ***** -->
+    <footer class="footer-area">
+        <!-- back end content -->
 
-            <div class="container">
-                <div class="row">
-                    <div class="col-12">
-                        <!-- Copywrite Text -->
-                        <div class="copywrite-text"></div>
-                        <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                            Copyright &copy;
-                            <script>document.write(new Date().getFullYear());</script> All rights reserved | Ganeshdeep
-                            Knitwear
-                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                        </p>
-                    </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Copywrite Text -->
+                    <div class="copywrite-text"></div>
+                    <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                        Copyright &copy;
+                        <script>document.write(new Date().getFullYear());</script> All rights reserved | Ganeshdeep
+                        Knitwear
+                        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                    </p>
                 </div>
             </div>
-            </div>
-        </footer>
-        <!-- ***** Footer Area End ***** -->
+        </div>
+        </div>
+    </footer>
+    <!-- ***** Footer Area End ***** -->
 
-        <!-- jQuery (Necessary for All JavaScript Plugins) -->
-        <script src="js/jquery/jquery-2.2.4.min.js" defer></script>
-        <!-- Popper js -->
-        <script src="js/popper.min.js" defer></script>
-        <!-- Bootstrap js -->
-        <script src="js/bootstrap.min.js" defer></script>
-        <!-- Plugins js -->
-        <script src="js/plugins.js" defer></script>
-        <!-- Active js -->
-        <script src="js/active.js" defer></script>
-        <script src="mail.js" defer></script>
-        <!-- Supabase and Products Scripts -->
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <script src="js/supabase-config.js"></script>
-        <script src="js/products.js"></script>
-    </body>
+    <!-- jQuery (Necessary for All JavaScript Plugins) -->
+    <script src="js/jquery/jquery-2.2.4.min.js" defer></script>
+    <!-- Popper js -->
+    <script src="js/popper.min.js" defer></script>
+    <!-- Bootstrap js -->
+    <script src="js/bootstrap.min.js" defer></script>
+    <!-- Plugins js -->
+    <script src="js/plugins.js" defer></script>
+    <!-- Active js -->
+    <script src="js/active.js" defer></script>
+    <script src="mail.js" defer></script>
+    <!-- Supabase and Products Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/supabase-config.js"></script>
+    <script type="module" src="js/products.js"></script>
+</body>
 
 </html>
-
-<script type="module">
-// Note: This script should be in your `js/products.js` file and loaded as a module.
-// I am placing it here to fulfill the request.
-
-import { supabase } from './supabase-config.js';
-
-// Function to load products from Supabase
-async function loadProducts() {
-    try {
-        const { data: products, error } = await supabase
-            .from('products')
-            .select(`
-                id,
-                name,
-                description,
-                image_url,
-                created_at,
-                product_tags (
-                    tags (
-                        name
-                    )
-                )
-            `)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
-        }
-
-        // Target the portfolio container, which is expected to be a row.
-        const productsContainer = document.querySelector('.sonar-portfolio');
-        if (!productsContainer) {
-            console.error('Products container (.sonar-portfolio) not found.');
-            return;
-        }
-
-        if (!products || products.length === 0) {
-            productsContainer.innerHTML = '<p class="col-12 text-center">No products available at the moment.</p>';
-            return;
-        }
-
-        // Generate HTML for each product that matches the theme's structure
-        const html = products.map(product => {
-            // Generate filter classes from tags for potential use with Isotope.js
-            const filterClasses = product.product_tags.map(pt => pt.tags.name.toLowerCase().replace(/\s+/g, '-')).join(' ');
-
-            return `
-                <!-- Single Product Item -->
-                <div class="col-12 col-sm-6 col-lg-3 single_gallery_item ${filterClasses} wow fadeInUp" data-wow-delay="300ms">
-                    <a class="gallery-img" href="${product.image_url}" data-img="${product.image_url}">
-                        <img src="${product.image_url}" alt="${product.name}">
-                    </a>
-                    <!-- Gallery Content with Add to Cart Button -->
-                    <div class="gallery-content">
-                        <h4>${product.name}</h4>
-                        <p>${product.description || ''}</p>
-                        <button class="add-to-cart-btn" data-img="${product.image_url}">
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // Replace the "Loading..." message with the generated product grid
-        productsContainer.innerHTML = html;
-
-        // After inserting products, re-attach event listeners for the new "Add to Cart" buttons
-        // This is crucial because the old listeners were on elements that no longer exist.
-        document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const imgSrc = this.dataset.img;
-                const productTitle = this.closest('.gallery-content').querySelector('h4').textContent;
-                // Assumes `openModal` is a globally available function from your other scripts
-                if (window.openModal) {
-                    window.openModal(imgSrc, productTitle, true);
-                } else {
-                    console.error('openModal function not found.');
-                }
-            });
-        });
-        
-        // Similarly, re-attach listeners for the gallery image click
-        document.querySelectorAll('.gallery-img').forEach(galleryImg => {
-            galleryImg.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const imgSrc = this.dataset.img;
-                const productTitle = this.closest('.single_gallery_item').querySelector('.gallery-content h4').textContent;
-                if (window.openModal) {
-                    window.openModal(imgSrc, productTitle, true);
-                }
-            });
-        });
-
-
-        // Re-initialize any plugins that depend on this dynamic content, like Isotope.js or WOW.js
-        if ($.fn.isotope) {
-            const $portfolio = $('.sonar-portfolio');
-            // Destroy previous instance if it exists, then re-init
-            if ($portfolio.data('isotope')) {
-                $portfolio.isotope('destroy');
-            }
-            $portfolio.imagesLoaded(function() {
-                $portfolio.isotope({
-                    itemSelector: '.single_gallery_item',
-                    percentPosition: true,
-                    masonry: {
-                        columnWidth: '.single_gallery_item'
-                    }
-                });
-            });
-        }
-        if (window.WOW) {
-            new WOW().init();
-        }
-
-    } catch (error) {
-        console.error('Error loading products:', error.message);
-        const productsContainer = document.querySelector('.sonar-portfolio');
-        if (productsContainer) {
-            productsContainer.innerHTML = '<p class="col-12 text-center" style="color:red;">Error loading products. Please check the console and try again later.</p>';
-        }
-    }
-}
-
-// Load products when the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', loadProducts);
-</script>
