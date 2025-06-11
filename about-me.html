@@ -153,32 +153,23 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
                             <!-- Single Progress Bar -->
                             <div class="single_progress_bar">
                                 <div id="bar1" class="barfiller">
-                                    <div class="tipWrap">
-                                        <span class="tip"></span>
-                                    </div>
-                                    <span class="fill" data-percentage="80"></span>
+                                    <span class="fill" data-percentage="100"></span>
                                 </div>
-                                <p>Our Heritage</p>
+                                <p><i class="fa fa-history" aria-hidden="true"></i> Our Heritage</p>
                             </div>
                             <!-- Single Progress Bar -->
                             <div class="single_progress_bar">
                                 <div id="bar2" class="barfiller">
-                                    <div class="tipWrap">
-                                        <span class="tip"></span>
-                                    </div>
-                                    <span class="fill" data-percentage="90"></span>
+                                    <span class="fill" data-percentage="100"></span>
                                 </div>
-                                <p>Our Innovation</p>
+                                <p><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Our Innovation</p>
                             </div>
                             <!-- Single Progress Bar -->
                             <div class="single_progress_bar">
                                 <div id="bar3" class="barfiller">
-                                    <div class="tipWrap">
-                                        <span class="tip"></span>
-                                    </div>
                                     <span class="fill" data-percentage="100"></span>
                                 </div>
-                                <p>Our Commitment</p>
+                                <p><i class="fa fa-heart" aria-hidden="true"></i> Our Commitment</p>
                             </div>
                         </div>
                     </div>
@@ -204,20 +195,29 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
                         <div class="row mt-100 text-center wow fadeInUp" data-wow-delay="900ms">
                             <div class="col-12 col-sm-6 col-md-4">
                                 <div class="single-pie-bar" data-percent="100">
-                                    <canvas class="bar-circle" width="100" height="100"></canvas>
-                                    <p>Standards</p>
+                                    <div class="feature-icon">
+                                        <i class="fa fa-check-circle" aria-hidden="true"></i>
+                                    </div>
+                                    <h4>Standards</h4>
+                                    <p>Excellence in Every Detail</p>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 col-md-4">
                                 <div class="single-pie-bar" data-percent="100">
-                                    <canvas class="bar-circle" width="100" height="100"></canvas>
-                                    <p>Quality</p>
+                                    <div class="feature-icon">
+                                        <i class="fa fa-star" aria-hidden="true"></i>
+                                    </div>
+                                    <h4>Quality</h4>
+                                    <p>Premium Craftsmanship</p>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 col-md-4">
                                 <div class="single-pie-bar" data-percent="90">
-                                    <canvas class="bar-circle" width="100" height="100"></canvas>
-                                    <p>Technologies</p>
+                                    <div class="feature-icon">
+                                        <i class="fa fa-cogs" aria-hidden="true"></i>
+                                    </div>
+                                    <h4>Technologies</h4>
+                                    <p>Modern Innovation</p>
                                 </div>
                             </div>
                         </div>
@@ -226,6 +226,87 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
             </div>
         </div>
     </div>
+
+    <style>
+        /* Progress Bar Styling */
+        .services-progress-bar {
+            padding: 20px 0;
+        }
+        .single_progress_bar {
+            margin-bottom: 30px;
+        }
+        .barfiller {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .barfiller .fill {
+            display: block;
+            position: relative;
+            width: 0px;
+            height: 100%;
+            background: linear-gradient(45deg, #4a90e2, #67b26f);
+            border-radius: 4px;
+            transition: width 1.5s ease-in-out;
+        }
+        .single_progress_bar p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .single_progress_bar p i {
+            color: #4a90e2;
+            font-size: 20px;
+        }
+
+        /* Feature Icons Styling */
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(45deg, #4a90e2, #67b26f);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+        .feature-icon:hover {
+            transform: scale(1.1);
+        }
+        .feature-icon i {
+            font-size: 36px;
+            color: white;
+        }
+        .single-pie-bar {
+            padding: 30px 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        .single-pie-bar:hover {
+            transform: translateY(-5px);
+        }
+        .single-pie-bar h4 {
+            margin: 15px 0 10px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        .single-pie-bar p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
 
     <!-- ***** Footer Area Start ***** -->
     <footer class="footer-area">

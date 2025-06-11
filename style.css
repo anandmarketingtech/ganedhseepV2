@@ -1878,7 +1878,9 @@ img {
 .sonar-projects-area {
   position: relative;
   z-index: 1;
-  padding: 100px 35px 50px;
+  padding: 100px 35px 50px; /* Adjust as needed */
+  width: 100%;
+  overflow: visible; /* important to avoid clipping */
 }
 
 .sonar-projects-area .row {

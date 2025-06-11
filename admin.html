@@ -11,7 +11,12 @@
     <div class="admin-container">
         <div class="admin-header">
             <h1>Admin Panel</h1>
-            <button class="btn btn-primary" id="logoutBtn">Logout</button>
+            <div class="admin-buttons">
+                <button class="btn btn-primary" id="ordersBtn">
+                    <a href="admin-orders.html" style="text-decoration: none; color: white;">Orders</a>
+                </button>
+                <button class="btn btn-primary" id="logoutBtn">Logout</button>
+            </div>
         </div>
         <div class="product-form">
             <h2>Add/Edit Product</h2>
@@ -60,5 +65,53 @@
     </div>
     <script type="module" src="js/admin-auth.js"></script>
     <script type="module" src="js/admin-panel.js"></script>
+    <script type="module" src="js/admin-customers.js"></script>
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .admin-header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .admin-buttons .btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .admin-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #ordersBtn {
+            background: #4a90e2;
+            border: none;
+            color: white;
+        }
+
+        #logoutBtn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+        }
+    </style>
 </body>
 </html> 

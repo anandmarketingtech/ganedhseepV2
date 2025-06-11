@@ -503,18 +503,16 @@
         <!-- ***** Header Area End ***** -->
 
         <!-- ****** Gallery Area Start ****** -->
-        <section class="sonar-projects-area" id="projects"
-            style="padding-bottom: 50px; padding-top: 30px; height: 100%; min-height: 100vh; position: relative; z-index: 1;">
-            <div class="container-fluid" style="position: relative; z-index: 1;">
-                <!-- The .sonar-portfolio and .row classes are used by the theme for grid layouts and responsiveness -->
-                <div class="row sonar-portfolio" style="position: relative; z-index: 1; margin: 0; padding: 0;">
-                    <!-- Products will be loaded dynamically here by js/products.js -->
+        <section class="sonar-projects-area" id="projects">
+            <div class="container-fluid">
+                <div class="row sonar-portfolio">
                     <div class="col-12 text-center">
                         <p>Loading products...</p>
                     </div>
                 </div>
             </div>
         </section>
+
 
         <style>
             /* Products Grid Layout */
@@ -531,12 +529,14 @@
             }
 
             .sonar-portfolio {
-                padding: 0;
+                display: flex;
+                flex-wrap: wrap;
+                width: 100%;
+                background: #fff;
                 position: relative;
                 z-index: 1;
-                background: #fff;
                 margin: 0;
-                width: 100%;
+                padding: 0;
             }
 
             .single_gallery_item {

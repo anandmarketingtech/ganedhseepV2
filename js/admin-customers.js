@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 _children: customer.orders.map(order => ({
                     name: `Order #${order.id.substring(0, 8)}`,
                     email: `Status: ${order.status}`,
-                    phone: `Date: ${new Date(order.order_date).toLocaleDateString()}`,
+                    phone: `Date: ${new Date(order.placed_at).toLocaleString()}`,
                     address: `Total Items: ${order.order_items.length}`,
                     _children: order.order_items.map(item => ({
                         name: item.product ? item.product.name : 'Product not found',
@@ -57,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     loadCustomerData();
-    
     // Logout functionality
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         await supabase.auth.signOut();
