@@ -506,12 +506,13 @@
         <section class="sonar-projects-area" id="projects">
             <div class="container-fluid">
                 <div class="row sonar-portfolio">
-                    <div class="col-12 text-center">
+                    <div  class="col-12 text-center">
                         <p>Loading products...</p>
                     </div>
                 </div>
             </div>
         </section>
+        
 
 
         <style>
@@ -521,14 +522,21 @@
                 grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
                 gap: 20px;
                 padding: 20px;
+                margin-bottom: 5px;
                 width: 100%;
                 margin: 0 auto;
                 max-width: 1400px;
                 position: relative;
                 z-index: 1;
             }
+            
+            body, .sonar-portfolio {
+    overflow: auto !important;
+}
+
 
             .sonar-portfolio {
+               
                 display: flex;
                 flex-wrap: wrap;
                 width: 100%;

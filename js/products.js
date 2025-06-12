@@ -164,40 +164,85 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- API & DATA LOADING ---
     async function loadProducts() {
         if (!elements.productsContainer) return;
+
+        // Reset any previous styles
+        elements.productsContainer.removeAttribute('style');
+        elements.productsContainer.className = 'row sonar-portfolio';
+        
+        // Show a loading message while fetching products
+        elements.productsContainer.innerHTML = `
+            <div class="container-fluid">
+                <div style="width: 100%; text-align: center; padding: 2em;">Loading products...</div>
+            </div>
+        `;
+
         try {
-            const { data: products, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+            const { data: products, error } = await supabase
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+
             if (error) throw error;
+
+            // Render products
             renderProducts(products);
         } catch (error) {
             console.error('Error loading products:', error);
-            elements.productsContainer.innerHTML = '<p>Error loading products. Please try again later.</p>';
+            elements.productsContainer.innerHTML = `
+                <div class="container-fluid">
+                    <div style="width: 100%; text-align: center; padding: 2em;">Error loading products. Please try again later.</div>
+                </div>
+            `;
         }
     }
 
-function renderProducts(products) {
+    function renderProducts(products) {
         if (!elements.productsContainer) return;
-    
-    if (!products || products.length === 0) {
-            elements.productsContainer.innerHTML = '<p>No products available at the moment.</p>';
-        return;
-    }
 
-    const html = products.map(product => `
-        <div class="single_gallery_item">
+        if (!products || products.length === 0) {
+            elements.productsContainer.innerHTML = `
+                <div class="container-fluid">
+                    <div style="width: 100%; text-align: center; padding: 2em;">No products available at the moment.</div>
+                </div>
+            `;
+            return;
+        }
+
+        const productsHtml = products.map(product => `
+            <div class="single_gallery_item">
                 <a class="gallery-img" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}">
-                <img src="${product.image_url}" alt="${product.name}">
+                    <img src="${product.image_url}" alt="${product.name}" loading="lazy">
                 </a>
-            <div class="gallery-content">
-                <h4>${product.name}</h4>
+                <div class="gallery-content">
+                    <h4>${product.name}</h4>
                     <button class="add-to-cart-btn" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}">
-                    Add to Cart
-                </button>
+                        Add to Cart
+                    </button>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
 
-        elements.productsContainer.innerHTML = `<div class="products">${html}</div>`;
+        elements.productsContainer.innerHTML = `
+            <div class="container-fluid">
+                <div class="products">${productsHtml}</div>
+            </div>
+        `;
+
+        // Ensure proper layout after rendering
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, 0);
+        document.documentElement.style.scrollBehavior = 'smooth';
     }
+
+    // Add resize event listener to handle layout changes
+    window.addEventListener('resize', () => {
+        requestAnimationFrame(() => {
+            if (elements.productsContainer) {
+                elements.productsContainer.style.height = 'auto';
+                elements.productsContainer.style.minHeight = '200px';
+            }
+        });
+    });
 
     // --- 3D MODEL COLOR LOGIC ---
     function applyMaterialChanges(modelViewer, colorValue) {
@@ -455,4 +500,4 @@ document.querySelectorAll('#colorSwatchContainer2 .color-swatch').forEach(swatch
     loadProducts();
     loadCart();
     initEventListeners();
-}); 
+});

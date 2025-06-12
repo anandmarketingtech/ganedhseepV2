@@ -1224,20 +1224,29 @@ img {
     position: relative;
     z-index: 1;
     padding: 100px 35px 50px;
+
+    @media (max-width: 768px) {
+        padding: 50px 20px 30px; // Adjust padding for smaller screens
+    }
+
     .single_gallery_item {
         position: relative;
         z-index: 1;
         margin-bottom: 50px;
+
+        @media (max-width: 768px) {
+            margin-bottom: 30px; // Adjust margin for smaller screens
+        }
+
         .gallery-content {
             padding-top: 30px;
+
             h4 {
                 margin-bottom: 10px;
-                @media #{$breakpoint-xs} {
-                    font-size: 20px;
+
+                @media (max-width: 768px) {
+                    font-size: 18px; // Adjust font size for smaller screens
                 }
-            }
-            p {
-                margin-bottom: 0;
             }
         }
     }
