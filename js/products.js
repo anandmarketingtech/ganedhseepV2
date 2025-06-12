@@ -165,7 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadProducts() {
         if (!elements.productsContainer) return;
         try {
-            const { data: products, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+            const { data: products, error } = await supabase
+                .from('products')
+                .select('*')
+                .order('order', { ascending: true });
             if (error) throw error;
             renderProducts(products);
         } catch (error) {
