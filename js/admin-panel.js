@@ -23,9 +23,11 @@ function initializePanel() {
             position: relative;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        .product-card.dragging {
-            opacity: 0.5;
-            transform: scale(1.02);
+        .product-card.sortable-ghost {
+            opacity: 0.4;
+            background: #f0f0f0;
+        }
+        .product-card.sortable-chosen {
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .product-card .order-number {
@@ -37,6 +39,7 @@ function initializePanel() {
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 0.9em;
+            z-index: 2;
         }
         .save-order-btn {
             position: fixed;
@@ -143,7 +146,7 @@ function initializePanel() {
         products.forEach((product, index) => {
             const statusClass = product.status === 'new-arrival' ? 'status-new' : product.status === 'out-of-stock' ? 'status-out-of-stock' : '';
             const productCard = `
-                <div class="product-card" draggable="true" data-id="${product.id}" data-order="${product.order}">
+                <div class="product-card" data-id="${product.id}" data-order="${product.order}">
                     <span class="order-number">Order: ${product.order}</span>
                     ${product.status ? `<span class="status-badge ${statusClass}">${product.status.replace('-', ' ')}</span>` : ''}
                     <img src="${product.image_url}" alt="${product.name}">
@@ -159,59 +162,30 @@ function initializePanel() {
             productList.innerHTML += productCard;
         });
 
-        // Initialize drag and drop
-        initializeDragAndDrop();
+        // Initialize Sortable
+        initializeSortable();
     }
 
-    function initializeDragAndDrop() {
+    function initializeSortable() {
         const productList = document.getElementById('productList');
-        const cards = productList.getElementsByClassName('product-card');
         const saveButton = document.querySelector('.save-order-btn');
         let hasChanges = false;
-        
-        Array.from(cards).forEach(card => {
-            card.addEventListener('dragstart', e => {
-                card.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', card.dataset.id);
-            });
 
-            card.addEventListener('dragend', () => {
-                card.classList.remove('dragging');
+        new Sortable(productList, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            onEnd: function() {
                 hasChanges = true;
                 saveButton.classList.add('visible');
-            });
-        });
-
-        productList.addEventListener('dragover', e => {
-            e.preventDefault();
-            const draggingCard = document.querySelector('.dragging');
-            const cards = [...productList.getElementsByClassName('product-card')];
-            const afterCard = cards.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = e.clientY - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-
-            if (afterCard) {
-                productList.insertBefore(draggingCard, afterCard);
-            } else {
-                productList.appendChild(draggingCard);
+                
+                // Update order numbers
+                const cards = [...productList.getElementsByClassName('product-card')];
+                cards.forEach((card, index) => {
+                    card.dataset.order = index + 1;
+                    card.querySelector('.order-number').textContent = `Order: ${index + 1}`;
+                });
             }
-        });
-
-        productList.addEventListener('drop', e => {
-            e.preventDefault();
-            const cards = [...productList.getElementsByClassName('product-card')];
-            
-            // Update the display order numbers
-            cards.forEach((card, index) => {
-                card.dataset.order = index + 1;
-                card.querySelector('.order-number').textContent = `Order: ${index + 1}`;
-            });
         });
 
         // Save button click handler
