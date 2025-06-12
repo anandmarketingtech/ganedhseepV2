@@ -180,8 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: products, error } = await supabase
                 .from('products')
                 .select('*')
-                .order('created_at', { ascending: false });
-
+                .order('order', { ascending: true });
             if (error) throw error;
 
             // Render products

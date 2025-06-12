@@ -91,8 +91,34 @@ if (window.location.pathname.endsWith('admin.html')) {
     })();
 }
 
+if (window.location.pathname.endsWith('admin-orders.html')) {
+    (async function checkAuth() {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.replace('admin-login.html');
+                return;
+            }
+            
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) {
+                window.location.replace('admin-login.html');
+                return;
+            }
+            
+            // Check if user's email is in the admin list
+            if (!ADMIN_EMAILS.includes(user.email)) {
+                window.location.replace('admin-login.html');
+                return;
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+            window.location.replace('admin-login.html');
+        }
+    })();
+}
 // Redirect to login if trying to access admin.html directly
-if (window.location.pathname.endsWith('admin.html')) {
+if (window.location.pathname.endsWith('admin.html') || window.location.pathname.endsWith('admin-orders.html')) {
     const currentPath = window.location.pathname;
     if (!currentPath.includes('admin-login.html')) {
         const { data: { session } } = await supabase.auth.getSession();
