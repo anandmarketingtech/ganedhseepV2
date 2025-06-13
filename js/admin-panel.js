@@ -4,6 +4,7 @@ import { enforceAuth } from './auth-check.js';
 let currentTags = [];
 const tagInput = document.getElementById('tagInput');
 const tagsContainer = document.getElementById('tagsContainer');
+let currentImageFile = null;
 
 // First enforce authentication
 (async function init() {
@@ -70,6 +71,27 @@ function initializePanel() {
     saveButton.className = 'save-order-btn';
     saveButton.textContent = 'Save Order';
     document.body.appendChild(saveButton);
+
+    // Add image preview functionality
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            currentImageFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            currentImageFile = null;
+            imagePreview.style.display = 'none';
+        }
+    });
 
     if (tagInput) {
         tagInput.addEventListener('keydown', async function(e) {
@@ -244,15 +266,35 @@ function initializePanel() {
         document.getElementById('productForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             let productId = document.getElementById('productId').value;
-            const product = {
-                name: document.getElementById('name').value,
-                category: document.getElementById('category').value,
-                image_url: document.getElementById('image').value,
-                description: document.getElementById('description').value,
-                status: document.getElementById('status').value
-            };
+            let imageUrl = '';
 
             try {
+                // Upload image if a new one is selected
+                if (currentImageFile) {
+                    const fileExt = currentImageFile.name.split('.').pop();
+                    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('products')
+                        .upload(fileName, currentImageFile);
+
+                    if (uploadError) throw uploadError;
+
+                    // Get public URL
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('products')
+                        .getPublicUrl(fileName);
+                    
+                    imageUrl = publicUrl;
+                }
+
+                const product = {
+                    name: document.getElementById('name').value,
+                    category: document.getElementById('category').value,
+                    image_url: imageUrl || document.getElementById('image').dataset.currentUrl,
+                    description: document.getElementById('description').value,
+                    status: document.getElementById('status').value
+                };
+
                 if (productId) {
                     // Update existing product
                     const { error } = await supabase
@@ -285,6 +327,7 @@ function initializePanel() {
                     if (error) throw error;
                     productId = data.id;
                 }
+
                 // Add tags
                 if (currentTags.length > 0) {
                     const { error } = await supabase
@@ -297,9 +340,12 @@ function initializePanel() {
                         );
                     if (error) throw error;
                 }
+
                 document.getElementById('productForm').reset();
                 document.getElementById('productId').value = '';
                 currentTags = [];
+                currentImageFile = null;
+                imagePreview.style.display = 'none';
                 updateTagsDisplay();
                 loadProducts();
             } catch (error) {
@@ -322,11 +368,19 @@ function initializePanel() {
         document.getElementById('productId').value = product.id;
         document.getElementById('name').value = product.name;
         document.getElementById('category').value = product.category;
-        document.getElementById('image').value = product.image_url;
+        document.getElementById('image').dataset.currentUrl = product.image_url;
         document.getElementById('description').value = product.description;
         document.getElementById('status').value = product.status || 'in-stock';
         currentTags = (product.product_tags || []).map(pt => pt.tags);
         updateTagsDisplay();
+
+        // Show current image preview
+        if (product.image_url) {
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            previewImg.src = product.image_url;
+            imagePreview.style.display = 'block';
+        }
     };
 
     // Delete product

@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const cartBtn = e.target.closest('.add-to-cart-btn');
             
             if (galleryImg || cartBtn) {
-            e.preventDefault();
+                e.preventDefault();
                 const el = galleryImg || cartBtn;
                 openModal(el.dataset.img, el.dataset.title, el.dataset.id);
             }
@@ -286,6 +286,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Modal Controls
         elements.productModal.querySelector('.modal-close').addEventListener('click', closeModal);
         elements.productModal.addEventListener('click', (e) => { if (e.target === elements.productModal) closeModal(); });
+
+        // Quantity Controls
+        const qtyButtons = elements.productModal.querySelectorAll('.modal-qty-btn');
+        qtyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const input = elements.modalQtyInput;
+                const currentValue = parseInt(input.value, 10) || 1;
+                if (button.textContent === '+') {
+                    input.value = currentValue + 1;
+                } else if (button.textContent === '-' && currentValue > 1) {
+                    input.value = currentValue - 1;
+                }
+            });
+        });
 
         elements.productModal.querySelector('.modal-add-to-cart').addEventListener('click', () => {
             addToCart({

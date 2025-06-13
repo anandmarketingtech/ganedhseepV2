@@ -25,7 +25,11 @@ function initializeTable() {
                 headerSort: false
             },
             { title: "Details", field: "email" },
-            { title: "Contact / Quantity", field: "phone" },
+            { 
+                title: "Contact / Quantity", 
+                field: "phone",
+                formatter: "html"
+            },
             { 
                 title: "Image / Color", 
                 field: "address",
@@ -77,7 +81,12 @@ function initializeTable() {
                     _children: order.order_items.map(item => ({
                         name: item.product ? item.product.name : 'Product not found',
                         email: `Quantity: ${item.quantity}`,
-                        phone: `Color: ${item.product_color || 'N/A'}`,
+                        phone: item.product_color ? 
+                            `<div style="display:flex;align-items:center;gap:6px;">
+                                <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background-color:${item.product_color};border:1px solid rgba(0,0,0,0.1);"></span>
+                                ${item.product_color}
+                            </div>` : 
+                            'N/A',
                         address: item.product?.image_url || ''
                     }))
                 }))
