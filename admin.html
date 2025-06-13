@@ -24,16 +24,37 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px;
+            padding: 20px 32px;
             background: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 30px;
+            background-color: #212529;
+            color: #fff;
+            border-radius: 10px;
+        }
+
+        .admin-header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .admin-header .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-header .logo-area img {
+            height: 40px;
+            width: auto;
         }
 
         .admin-header h1 {
             margin: 0;
             font-size: 24px;
-            color: #333;
+            color: #23232b;
+            font-weight: 600;
         }
 
         .admin-buttons {
@@ -42,21 +63,23 @@
         }
 
         .admin-buttons .btn {
-            padding: 8px 20px;
-            border-radius: 6px;
+            padding: 10px 24px;
+            border-radius: 8px;
             font-weight: 500;
             transition: all 0.3s ease;
             cursor: pointer;
+            font-size: 0.95em;
         }
 
         .admin-buttons .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         #ordersBtn {
-            background: #4a90e2;
-            border: none;
+            background: #23232b;
+            border: 1px solid #23232b;
+            border-radius: 10px;
             color: white;
         }
 
@@ -78,9 +101,14 @@
     <!-- Protected Content -->
     <div class="admin-container" id="protectedContent" style="display:none;">
         <div class="admin-header">
-            <h1>Admin Panel</h1>
+            <div class="admin-header-left">
+                <div class="logo-area">
+                    <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear">
+                </div>
+                <h1>Admin Panel</h1>
+            </div>
             <div class="admin-buttons">
-                <button class="btn btn-primary" id="ordersBtn">
+                <button class="btn btn-primary" id="ordersBtn" style="border-radius: 10px; border: 1px solid #23232b;">
                     <a href="admin-orders.html" style="text-decoration: none; color: white;">Orders</a>
                 </button>
                 <button class="btn btn-primary" id="logoutBtn">Logout</button>

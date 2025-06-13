@@ -115,10 +115,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const openModal = (imgSrc, title, productId) => {
         if (!elements.productModal) return;
 
+        const productElement = document.querySelector(`[data-id="${productId}"]`);
+        const description = productElement ? productElement.dataset.description : '';
+
         elements.productModal.dataset.productId = productId;
         elements.modalImg.src = imgSrc;
         elements.modalTitle.textContent = title;
         elements.modalQtyInput.value = 1;
+        
+        // Add description to modal
+        const descriptionElement = elements.productModal.querySelector('.modal-product-description');
+        if (descriptionElement) {
+            descriptionElement.textContent = description || 'No description available.';
+        }
         
         setupModalColors();
         
@@ -209,12 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const productsHtml = products.map(product => `
             <div class="single_gallery_item">
-                <a class="gallery-img" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}">
+                <a class="gallery-img" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}" data-description="${product.description || ''}">
                     <img src="${product.image_url}" alt="${product.name}" loading="lazy">
                 </a>
                 <div class="gallery-content">
                     <h4>${product.name}</h4>
-                    <button class="add-to-cart-btn" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}">
+                    <button class="add-to-cart-btn" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}" data-description="${product.description || ''}">
                         Add to Cart
                     </button>
                 </div>

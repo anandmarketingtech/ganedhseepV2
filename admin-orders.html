@@ -60,6 +60,67 @@
             align-items: center;
             z-index: 9999;
         }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 32px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            background-color: #212529;
+            color: #fff;
+            border-radius: 10px;
+        }
+
+        .admin-header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .admin-header .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-header .logo-area img {
+            height: 40px;
+            width: auto;
+        }
+
+        .admin-header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #23232b;
+            font-weight: 600;
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .admin-buttons .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .admin-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        #logoutBtn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -73,9 +134,14 @@
     <!-- Protected Content -->
     <div class="admin-container" id="protectedContent" style="display:none;">
         <div class="admin-header">
-            <h1>Order Management</h1>
-            <div>
-                <a href="admin.html" class="btn btn-primary me-2">Products</a>
+            <div class="admin-header-left">
+                <div class="logo-area">
+                    <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear">
+                </div>
+                <h1>Order Management</h1>
+            </div>
+            <div class="admin-buttons">
+                <a href="admin.html" class="btn btn-primary">Products</a>
                 <button class="btn btn-primary" id="logoutBtn">Logout</button>
             </div>
         </div>
