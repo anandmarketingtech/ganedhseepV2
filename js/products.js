@@ -170,6 +170,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getModalColor = () => elements.modalColorDropdownBtn.getAttribute('data-color') || '';
     
+    // --- EMAIL FUNCTIONS ---
+    const sendOrderConfirmationEmail = async (orderData, customerData) => {
+        try {
+            // Check if emailService is available
+            if (typeof window.emailService === 'undefined') {
+                console.warn('Email service not available, skipping order confirmation email');
+                return { success: false, error: 'Email service not loaded' };
+            }
+
+            const emailData = {
+                customerName: customerData.name,
+                customerEmail: customerData.email,
+                customerPhone: customerData.phone,
+                customerAddress: customerData.address,
+                orderId: orderData.id,
+                items: cart
+            };
+
+            const result = await window.emailService.sendOrderConfirmation(emailData);
+            
+            if (result.success) {
+                console.log('Order confirmation email sent successfully');
+            } else {
+                console.error('Failed to send order confirmation email:', result.error);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('Error sending order confirmation email:', error);
+            return { success: false, error: error.message };
+        }
+    };
+    
     // --- API & DATA LOADING ---
     async function loadProducts() {
         if (!elements.productsContainer) return;
@@ -464,8 +497,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (itemsError) throw itemsError;
 
+                // Step 4: Send order confirmation email
+                const emailResult = await sendOrderConfirmationEmail(orderData, customerData);
+                
                 // All successful
-                alert("Thank you! Your order has been submitted. We will contact you shortly.");
+                let successMessage = "Thank you! Your order has been submitted successfully. We will contact you shortly.";
+                if (emailResult.success) {
+                    successMessage += " A confirmation email has been sent to your email address.";
+                } else {
+                    successMessage += " Note: We couldn't send a confirmation email, but your order was received.";
+                }
+                
+                alert(successMessage);
                 cart = [];
                 saveCart();
                 updateCartUI();

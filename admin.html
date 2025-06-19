@@ -1,169 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Panel - Ganeshdeep Knitwear</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/color.css">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/color.css" />
+    <link rel="icon" href="img/core-img/favicon.ico" />
+
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
-        #loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 32px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            background-color: #212529;
-            color: #fff;
-            border-radius: 10px;
-        }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f6fa;
+      }
 
-        .admin-header-left {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
+      #loading {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(255, 255, 255, 0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
 
-        .admin-header .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+      .admin-container {
+        padding: 30px;
+        max-width: 1080px;
+        margin: 0 auto;
+      }
 
-        .admin-header .logo-area img {
-            height: 40px;
-            width: auto;
-        }
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        background-color: #2d2c34;
+        color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 40px;
+      }
 
-        .admin-header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #23232b;
-            font-weight: 600;
-        }
+      .admin-header .logo-area img {
+        height: 40px;
+      }
 
-        .admin-buttons {
-            display: flex;
-            gap: 15px;
-        }
+      .admin-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-left: 16px;
+        color: #fff;
+      }
 
-        .admin-buttons .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.95em;
-        }
+      .admin-buttons {
+        display: flex;
+        gap: 12px;
+      }
 
-        .admin-buttons .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+      .admin-buttons .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+      }
 
-        #ordersBtn {
-            background: #23232b;
-            border: 1px solid #23232b;
-            border-radius: 10px;
-            color: white;
-        }
+      #ordersBtn {
+        background-color: #444;
+        color: #fff;
+      }
 
-        #logoutBtn {
-            background: #e74c3c;
-            border: none;
-            color: white;
-        }
+      #ordersBtn a {
+        color: white;
+        text-decoration: none;
+      }
+
+      #logoutBtn {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .admin-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Form Styling */
+      .product-form {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 40px;
+      }
+
+      .product-form h2 {
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        color: #333;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 1rem;
+        border: 1.5px solid #ccc;
+        border-radius: 8px;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        border-color: #2d2c34;
+        outline: none;
+      }
+
+      /* Tags */
+      #tagInput {
+        margin-top: 10px;
+      }
+
+      .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .tags-container span {
+        background-color: #e0e0e0;
+        padding: 6px 10px;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        color: #333;
+      }
+
+      /* Image Preview */
+      #imagePreview {
+        margin-top: 10px;
+        max-width: 200px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      #imagePreview img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 8px;
+      }
+
+      /* Product List Placeholder */
+      .product-list {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+      .admin-header-left{
+        display: flex;
+        align-items: center;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Loading Spinner -->
     <div id="loading">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
 
     <!-- Protected Content -->
-    <div class="admin-container" id="protectedContent" style="display:none;">
-        <div class="admin-header">
-            <div class="admin-header-left">
-                <div class="logo-area">
-                    <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear">
-                </div>
-                <h1>Admin Panel</h1>
+    <div class="admin-container" id="protectedContent" style="display: none">
+      <div class="admin-header">
+        <div class="admin-header-left">
+          <div class="logo-area">
+            <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear" />
+          </div>
+          <h1>Admin Panel</h1>
+        </div>
+        <div class="admin-buttons">
+          <button
+            class="btn btn-primary"
+            id="ordersBtn"
+            style="border-radius: 10px; border: 1px solid #23232b"
+          >
+            <a
+              href="admin-orders.html"
+              style="text-decoration: none; color: white"
+              >Orders</a
+            >
+          </button>
+          <button class="btn btn-primary" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+      <div class="product-form">
+        <h2>Add/Edit Product</h2>
+        <form id="productForm">
+          <input type="hidden" id="productId" />
+          <div class="form-group">
+            <label for="name">Product Name</label>
+            <input type="text" id="name" required />
+          </div>
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+              <option value="Sweater">Sweater</option>
+              <option value="Shawls">Shawls</option>
+              <option value="Designer">Designer</option>
+              <option value="Warmers">Warmers</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="image">Product Image</label>
+            <input type="file" id="image" accept="image/*" required />
+            <div
+              id="imagePreview"
+              style="margin-top: 10px; max-width: 200px; display: none"
+            >
+              <img id="previewImg" style="width: 100%; height: auto" />
             </div>
-            <div class="admin-buttons">
-                <button class="btn btn-primary" id="ordersBtn" style="border-radius: 10px; border: 1px solid #23232b;">
-                    <a href="admin-orders.html" style="text-decoration: none; color: white;">Orders</a>
-                </button>
-                <button class="btn btn-primary" id="logoutBtn">Logout</button>
-            </div>
-        </div>
-        <div class="product-form">
-            <h2>Add/Edit Product</h2>
-            <form id="productForm">
-                <input type="hidden" id="productId">
-                <div class="form-group">
-                    <label for="name">Product Name</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category" required>
-                        <option value="Sweater">Sweater</option>
-                        <option value="Shawls">Shawls</option>
-                        <option value="Designer">Designer</option>
-                        <option value="Warmers">Warmers</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="image">Product Image</label>
-                    <input type="file" id="image" accept="image/*" required>
-                    <div id="imagePreview" style="margin-top: 10px; max-width: 200px; display: none;">
-                        <img id="previewImg" style="width: 100%; height: auto;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="status">Status</label>
-                    <select id="status" required>
-                        <option value="in-stock">In Stock</option>
-                        <option value="out-of-stock">Out of Stock</option>
-                        <option value="new-arrival">New Arrival</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="tags">Tags</label>
-                    <div class="tags-container" id="tagsContainer"></div>
-                    <input type="text" id="tagInput" placeholder="Add a tag and press Enter">
-                </div>
-                <button type="submit" class="btn btn-primary">Save Product</button>
-            </form>
-        </div>
-        <div class="product-list" id="productList">
-            <!-- Products will be loaded here -->
-        </div>
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" required>
+              <option value="in-stock">In Stock</option>
+              <option value="out-of-stock">Out of Stock</option>
+              <option value="new-arrival">New Arrival</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tags">Tags</label>
+            <div class="tags-container" id="tagsContainer"></div>
+            <input
+              type="text"
+              id="tagInput"
+              placeholder="Add a tag and press Enter"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Save Product</button>
+        </form>
+      </div>
+      <div class="product-list" id="productList">
+        <!-- Products will be loaded here -->
+      </div>
     </div>
     <script type="module" src="js/admin-auth.js"></script>
     <script type="module" src="js/admin-panel.js"></script>
     <script type="module" src="js/admin-customers.js"></script>
-</body>
-</html> 
+  </body>
+</html>

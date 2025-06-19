@@ -1,167 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Customers - Admin Panel</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
     <!-- Tabulator CSS -->
-    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+    <link
+      href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_bootstrap5.min.css"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="img/core-img/favicon.ico" />
+
     <!-- Luxon for Tabulator date formatting -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-    <link href="css/style.css" rel="stylesheet">
-    <link href="css/color.css" rel="stylesheet">
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"
+    ></script>
+    <link href="css/style.css" rel="stylesheet" />
+    <link href="css/color.css" rel="stylesheet" />
     <style>
-        .tabulator {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #fff;
-        }
-        .tabulator .tabulator-header {
-            background-color: #f8f9fa;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            font-weight: 600;
-        }
-        .tabulator .tabulator-row {
-            border-bottom: 1px solid #dee2e6;
-        }
-        .tabulator .tabulator-row:last-of-type {
-            border-bottom: none;
-        }
-        .tabulator .tabulator-row .tabulator-cell {
-            border-right: 1px solid #f1f1f1;
-        }
-        .tabulator .tabulator-row .tabulator-cell:last-of-type {
-            border-right: none;
-        }
-        /* Nested table styling */
-        .tabulator .tabulator-tree-level-1 .tabulator-cell {
-            background-color: #f8f9fa;
-            font-weight: 500;
-        }
-        .tabulator .tabulator-tree-level-2 .tabulator-cell {
-            background-color: #fff;
-            padding-left: 30px !important;
-        }
-        #loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 32px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            background-color: #212529;
-            color: #fff;
-            border-radius: 10px;
-        }
+      /* GENERAL RESET & BASE */
+      body {
+        margin: 0;
+        background-color: #f5f7fa;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: #333;
+      }
 
-        .admin-header-left {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
+      #loading {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(255, 255, 255, 0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
 
-        .admin-header .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+      /* HEADER */
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 32px;
+        background-color: #212529;
+        color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
 
-        .admin-header .logo-area img {
-            height: 40px;
-            width: auto;
-        }
+      .admin-header-left {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
 
-        .admin-header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #23232b;
-            font-weight: 600;
-        }
+      .logo-area img {
+        height: 42px;
+        width: auto;
+      }
 
-        .admin-buttons {
-            display: flex;
-            gap: 15px;
-        }
+      .admin-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        color: #fff;
+      }
 
-        .admin-buttons .btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 0.95em;
-        }
+      /* BUTTONS */
+      .admin-buttons {
+        display: flex;
+        gap: 12px;
+      }
 
-        .admin-buttons .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+      .admin-buttons .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s ease;
+      }
 
-        #logoutBtn {
-            background: #e74c3c;
-            border: none;
-            color: white;
-        }
+      .admin-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      }
+
+      #logoutBtn {
+        background-color: #e74c3c;
+        color: #fff;
+        border: none;
+      }
+
+      /* CARD */
+      .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        background: #fff;
+      }
+
+      /* TABULATOR TABLE */
+      .tabulator {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        overflow: hidden;
+        background-color: #fff;
+      }
+
+      .tabulator .tabulator-header {
+        background-color: #f8f9fa;
+        color: #212529;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      .tabulator .tabulator-row {
+        border-bottom: 1px solid #edf0f3;
+        transition: background-color 0.2s ease;
+      }
+
+      .tabulator .tabulator-row:hover {
+        background-color: #f1f3f6;
+      }
+
+      .tabulator .tabulator-cell {
+        border-right: 1px solid #f1f1f1;
+        padding: 10px;
+      }
+
+      .tabulator .tabulator-cell:last-of-type {
+        border-right: none;
+      }
+
+      /* TREE STYLING */
+      .tabulator .tabulator-tree-level-1 .tabulator-cell {
+        background-color: #f8f9fa;
+        font-weight: 500;
+      }
+
+      .tabulator .tabulator-tree-level-2 .tabulator-cell {
+        background-color: #fff;
+        padding-left: 30px !important;
+      }
+
+      /* RESPONSIVE CONTAINER */
+      .admin-container {
+        padding: 32px;
+        max-width: 1140px;
+        margin: auto;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Loading Spinner -->
     <div id="loading">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
 
     <!-- Protected Content -->
-    <div class="admin-container" id="protectedContent" style="display:none;">
-        <div class="admin-header">
-            <div class="admin-header-left">
-                <div class="logo-area">
-                    <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear">
-                </div>
-                <h1>Order Management</h1>
-            </div>
-            <div class="admin-buttons">
-                <a href="admin.html" class="btn btn-primary">Products</a>
-                <button class="btn btn-primary" id="logoutBtn">Logout</button>
-            </div>
+    <div class="admin-container" id="protectedContent" style="display: none">
+      <div class="admin-header">
+        <div class="admin-header-left">
+          <div class="logo-area">
+            <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear" />
+          </div>
+          <h1>Order Management</h1>
         </div>
+        <div class="admin-buttons">
+          <a href="admin.html" class="btn btn-primary">Products</a>
+          <button class="btn btn-primary" id="logoutBtn">Logout</button>
+        </div>
+      </div>
 
-        <div class="card">
-            <div class="card-body">
-                <div id="customer-table"></div>
-            </div>
+      <div class="card">
+        <div class="card-body">
+          <div id="customer-table"></div>
         </div>
+      </div>
     </div>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Tabulator -->
-    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
-    
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"
+    ></script>
+
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <!-- Custom JS (as a module) -->
     <script type="module" src="js/admin-customers.js"></script>
-</body>
-</html> 
+  </body>
+</html>

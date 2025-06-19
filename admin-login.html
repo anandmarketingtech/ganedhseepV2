@@ -1,133 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Ganeshdeep Knitwear</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/color.css">
-    <style>
-        body {
-            background: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
-        .login-container {
-            max-width: 400px;
-            width: 90%;
-            margin: 2rem;
-            padding: 2.5rem;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .login-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .login-header h2 {
-            color: #2d2c34;
-            margin: 0;
-            font-size: 1.8rem;
-        }
-        .login-header p {
-            color: #666;
-            margin: 0.5rem 0 0;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #333;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e1e1e1;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: #2d2c34;
-        }
-        .btn {
-            width: 100%;
-            padding: 0.875rem;
-            background: #2d2c34;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 1rem;
-            transition: background-color 0.3s ease;
-        }
-        .btn:hover {
-            background: #1a1a1f;
-        }
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .error-message {
-            color: #dc3545;
-            margin-top: 1rem;
-            text-align: center;
-            padding: 0.75rem;
-            background: #fff5f5;
-            border-radius: 8px;
-            display: none;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin-top: 1rem;
-        }
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 1.5rem;
-            height: 1.5rem;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #2d2c34;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login - Ganeshdeep Knitwear</title>
+  <link rel="icon" href="img/core-img/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/color.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d2c34, #000000);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .login-container {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 0rem 2rem 2.5rem 0rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-wrapper {
+      background-color: #2d2c34;
+      padding: 1rem;
+      border-radius: 12px 10px 0 0;
+      text-align: center;
+      margin-bottom: 2rem;
+      width: 100%;
+    }
+
+    .logo-wrapper img {
+      max-width: 300px;
+      height: auto;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-header h2 {
+      font-size: 1.75rem;
+      color: #2d2c34;
+      margin-bottom: 0.3rem;
+    }
+
+    .login-header p {
+      font-size: 0.95rem;
+      color: #6b6b6b;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 90%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1.8px solid #d1d1d1;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #2d2c34;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: #2d2c34;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #1a1a1f;
+    }
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      color: #dc3545;
+      background-color: #ffe2e6;
+      padding: 0.75rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      text-align: center;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #2d2c34;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    #loginForm{
+        margin-left: 1.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h2>Admin Login</h2>
-            <p>Welcome back! Please login to your account.</p>
-        </div>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required placeholder="Enter your email">
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required placeholder="Enter your password">
-            </div>
-            <button type="submit" class="btn" id="loginButton">Login</button>
-            <div id="errorMessage" class="error-message"></div>
-            <div id="loading" class="loading"></div>
-        </form>
+  <div class="login-container">
+    <div class="logo-wrapper">
+      <img src="img/bg-img/LogoJ.png" alt="Ganeshdeep Knitwear Logo" />
     </div>
-    <script type="module" src="js/admin-auth.js"></script>
+    <div class="login-header">
+      <h2>Admin Login</h2>
+      <p>Welcome back! Please login to your account.</p>
+    </div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required placeholder="Enter your email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="Enter your password">
+      </div>
+      <button type="submit" class="btn" id="loginButton">Login</button>
+      <div id="errorMessage" class="error-message"></div>
+      <div id="loading" class="loading"></div>
+    </form>
+  </div>
+  <script type="module" src="js/admin-auth.js"></script>
 </body>
-</html> 
+</html>
