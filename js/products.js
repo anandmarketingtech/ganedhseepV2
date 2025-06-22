@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let cart = [];
+    let currentKeyboardHandler = null; // Store keyboard handler for cleanup
 
     // --- UTILITY FUNCTIONS ---
     const getColorsFromSwatch = (containerId) => {
@@ -50,6 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const saved = localStorage.getItem('knitwear_cart');
             cart = saved ? JSON.parse(saved) : [];
+            
+            // Check if cart has old structure (with 'img' property instead of 'product_images')
+            const hasOldStructure = cart.some(item => item.img && !item.product_images);
+            if (hasOldStructure) {
+                console.log('Clearing old cart structure');
+                cart = [];
+                saveCart();
+            }
         } catch (e) {
             console.error("Failed to load cart from localStorage", e);
             cart = [];
@@ -84,9 +93,34 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.cartItemsDiv.innerHTML = '<div id="cartEmptyMsg">Your cart is empty.</div>';
             elements.cartBuyNowBtn.disabled = true;
         } else {
-            elements.cartItemsDiv.innerHTML = cart.map((item, idx) => `
+            elements.cartItemsDiv.innerHTML = cart.map((item, idx) => {
+                // Debug logging
+                console.log('Cart item:', item);
+                console.log('Cart item product_images:', item.product_images);
+                
+                let images = [];
+                if (Array.isArray(item.product_images)) {
+                    images = item.product_images;
+                } else if (typeof item.product_images === 'string') {
+                    try {
+                        images = JSON.parse(item.product_images);
+                    } catch (e) {
+                        console.error('Failed to parse product_images:', e);
+                        images = [];
+                    }
+                }
+                if (!Array.isArray(images)) images = [];
+                
+                console.log('Processed images array:', images);
+                
+                const sortedImages = images.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+                const primaryImage = sortedImages[0]?.image_url || 'img/placeholder.jpg';
+                
+                console.log('Primary image URL:', primaryImage);
+                
+                return `
                 <div class="cart-item" data-idx="${idx}">
-                    <img src="${item.img}" alt="${item.title}">
+                   <img src="${primaryImage}" alt="${item.title}">
                     <div class="cart-item-details">
                         <div class="cart-item-title">${item.title}</div>
                         <div class="cart-item-meta">
@@ -100,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <button class="cart-item-remove" title="Remove">&times;</button>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             elements.cartBuyNowBtn.disabled = false;
         }
     };
@@ -112,14 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- MODAL LOGIC ---
-    const openModal = (imgSrc, title, productId) => {
+    const openModal = (imgSrc, title, productId, allImages = []) => {
         if (!elements.productModal) return;
 
         const productElement = document.querySelector(`[data-id="${productId}"]`);
         const description = productElement ? productElement.dataset.description : '';
 
         elements.productModal.dataset.productId = productId;
-        elements.modalImg.src = imgSrc;
         elements.modalTitle.textContent = title;
         elements.modalQtyInput.value = 1;
         
@@ -129,14 +163,183 @@ document.addEventListener('DOMContentLoaded', () => {
             descriptionElement.textContent = description || 'No description available.';
         }
         
+        // Handle multiple images - create gallery
+        setupModalImageGallery(imgSrc, allImages);
+        
         setupModalColors();
         
         document.body.classList.add('modal-open');
         elements.productModal.style.display = 'flex';
     };
 
+    const setupModalImageGallery = (primaryImage, allImages = []) => {
+        const modalImageContainer = elements.productModal.querySelector('.modal-image-container');
+        const modalImg = elements.modalImg;
+        
+        if (!modalImageContainer || !modalImg) return;
+
+        // Clear existing gallery
+        modalImageContainer.innerHTML = '';
+
+        // If we have multiple images, create a gallery
+        if (allImages && allImages.length > 1) {
+            // Main image display
+            const mainImageDiv = document.createElement('div');
+            mainImageDiv.className = 'modal-main-image';
+            mainImageDiv.style.cssText = `
+                position: relative;
+                width: 100%;
+                height: 400px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 15px;
+            `;
+            
+            const mainImg = document.createElement('img');
+            mainImg.src = primaryImage;
+            mainImg.alt = 'Product';
+            mainImg.style.cssText = `
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                border-radius: 8px;
+                transition: opacity 0.3s;
+            `;
+            
+            // Navigation arrows
+            const prevBtn = document.createElement('button');
+            prevBtn.innerHTML = '‹';
+            prevBtn.className = 'modal-nav-btn modal-prev-btn';
+            prevBtn.style.cssText = `
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0,0,0,0.7);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10;
+            `;
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.innerHTML = '›';
+            nextBtn.className = 'modal-nav-btn modal-next-btn';
+            nextBtn.style.cssText = `
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0,0,0,0.7);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10;
+            `;
+            
+            mainImageDiv.appendChild(mainImg);
+            mainImageDiv.appendChild(prevBtn);
+            mainImageDiv.appendChild(nextBtn);
+            
+            // Thumbnail gallery
+            const thumbnailDiv = document.createElement('div');
+            thumbnailDiv.className = 'modal-thumbnails';
+            thumbnailDiv.style.cssText = `
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+                flex-wrap: wrap;
+                max-width: 100%;
+            `;
+            
+            allImages.forEach((image, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = image;
+                thumb.alt = `Product ${index + 1}`;
+                thumb.style.cssText = `
+                    width: 60px;
+                    height: 60px;
+                    object-fit: cover;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    border: 2px solid transparent;
+                    transition: border-color 0.2s;
+                    ${index === 0 ? 'border-color: #0078d7;' : ''}
+                `;
+                
+                thumb.addEventListener('click', () => {
+                    mainImg.src = image;
+                    // Update active thumbnail
+                    thumbnailDiv.querySelectorAll('img').forEach((t, i) => {
+                        t.style.borderColor = i === index ? '#0078d7' : 'transparent';
+                    });
+                });
+                
+                thumbnailDiv.appendChild(thumb);
+            });
+            
+            // Navigation functionality
+            let currentIndex = 0;
+            
+            const updateImage = (index) => {
+                if (index < 0) index = allImages.length - 1;
+                if (index >= allImages.length) index = 0;
+                
+                currentIndex = index;
+                mainImg.src = allImages[index];
+                
+                // Update active thumbnail
+                thumbnailDiv.querySelectorAll('img').forEach((t, i) => {
+                    t.style.borderColor = i === index ? '#0078d7' : 'transparent';
+                });
+            };
+            
+            prevBtn.addEventListener('click', () => updateImage(currentIndex - 1));
+            nextBtn.addEventListener('click', () => updateImage(currentIndex + 1));
+            
+            // Keyboard navigation
+            const handleKeyDown = (e) => {
+                if (e.key === 'ArrowLeft') updateImage(currentIndex - 1);
+                if (e.key === 'ArrowRight') updateImage(currentIndex + 1);
+            };
+            
+            document.addEventListener('keydown', handleKeyDown);
+            currentKeyboardHandler = handleKeyDown; // Store for cleanup
+            
+            modalImageContainer.appendChild(mainImageDiv);
+            modalImageContainer.appendChild(thumbnailDiv);
+            
+        } else {
+            // Single image display
+            modalImg.src = primaryImage;
+            modalImg.style.display = 'block';
+        }
+    };
+
     const closeModal = () => {
         if (!elements.productModal) return;
+        
+        // Clean up keyboard event listeners if they were added
+        if (currentKeyboardHandler) {
+            document.removeEventListener('keydown', currentKeyboardHandler);
+            currentKeyboardHandler = null;
+        }
+        
         elements.productModal.style.display = 'none';
         document.body.classList.remove('modal-open');
     };
@@ -221,9 +424,20 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const { data: products, error } = await supabase
                 .from('products')
-                .select('*')
-                .order('order', { ascending: true });
+                .select(`
+                    *,
+                    product_images (
+                        id,
+                        image_url,
+                        "order"
+                    )
+                `)
+                .order('order', { ascending: true })
+                .order('order', { foreignTable: 'product_images', ascending: true });
             if (error) throw error;
+
+            // Debug: Log the products data structure
+            console.log('Products loaded from database:', products);
 
             // Render products
             renderProducts(products);
@@ -249,19 +463,38 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const productsHtml = products.map(product => `
-            <div class="single_gallery_item">
-                <a class="gallery-img" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}" data-description="${product.description || ''}">
-                    <img src="${product.image_url}" alt="${product.name}" loading="lazy">
-                </a>
-                <div class="gallery-content">
-                    <h4>${product.name}</h4>
-                    <button class="add-to-cart-btn" data-img="${product.image_url}" data-title="${product.name}" data-id="${product.id}" data-description="${product.description || ''}">
-                        Add to Cart
-                    </button>
+        const productsHtml = products.map(product => {
+            // Get the first image (primary image) for the product
+            const sortedImages = product.product_images?.slice().sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
+            const primaryImage = sortedImages[0]?.image_url || '';
+            
+            // Get all image URLs for the modal gallery, but store the full objects for the cart
+            const allImageUrls = sortedImages.map(img => img.image_url);
+
+            return `
+                <div class="single_gallery_item">
+                    <a class="gallery-img" 
+                       data-img="${primaryImage}" 
+                       data-title="${product.name}" 
+                       data-id="${product.id}" 
+                       data-description="${product.description || ''}"
+                       data-images='${JSON.stringify(sortedImages)}'>
+                        <img src="${primaryImage}" alt="${product.name}" loading="lazy">
+                    </a>
+                    <div class="gallery-content">
+                        <h4>${product.name}</h4>
+                        <button class="add-to-cart-btn" 
+                                data-img="${primaryImage}" 
+                                data-title="${product.name}" 
+                                data-id="${product.id}" 
+                                data-description="${product.description || ''}"
+                                data-images='${JSON.stringify(sortedImages)}'>
+                            Add to Cart
+                        </button>
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         elements.productsContainer.innerHTML = `
             <div class="container-fluid">
@@ -321,7 +554,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (galleryImg || cartBtn) {
                 e.preventDefault();
                 const el = galleryImg || cartBtn;
-                openModal(el.dataset.img, el.dataset.title, el.dataset.id);
+                
+                // Parse the images data and extract URLs for the modal
+                let imageUrls = [];
+                try {
+                    const imagesData = el.dataset.images ? JSON.parse(el.dataset.images) : [];
+                    imageUrls = imagesData.map(img => img.image_url);
+                } catch (e) {
+                    console.error('Error parsing images data:', e);
+                    imageUrls = [];
+                }
+                
+                console.log('Opening modal with images:', imageUrls);
+                openModal(el.dataset.img, el.dataset.title, el.dataset.id, imageUrls);
             }
         });
 
@@ -344,24 +589,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         elements.productModal.querySelector('.modal-add-to-cart').addEventListener('click', () => {
-            addToCart({
-                id: elements.productModal.dataset.productId,
+            const productId = elements.productModal.dataset.productId;
+            const productElement = document.querySelector(`.gallery-img[data-id="${productId}"]`);
+            
+            // Debug: Log what we're about to add to cart
+            console.log('Adding to cart - Product Element:', productElement);
+            console.log('Adding to cart - Data Images:', productElement?.dataset.images);
+            
+            const productImages = productElement?.dataset.images ? JSON.parse(productElement.dataset.images) : [];
+            console.log('Adding to cart - Parsed Product Images:', productImages);
+            
+            const cartItem = {
+                id: productId,
                 title: elements.modalTitle.textContent,
-                img: elements.modalImg.src,
                 qty: parseInt(elements.modalQtyInput.value, 10) || 1,
-                color: getModalColor()
-            });
+                color: getModalColor(),
+                product_images: productImages
+            };
+            
+            console.log('Final cart item being added:', cartItem);
+            addToCart(cartItem);
             closeModal();
         });
 
         elements.productModal.querySelector('.modal-buy-now').addEventListener('click', () => {
-            addToCart({
-                id: elements.productModal.dataset.productId,
+            const productId = elements.productModal.dataset.productId;
+            const productElement = document.querySelector(`.gallery-img[data-id="${productId}"]`);
+            
+            const productImages = productElement?.dataset.images ? JSON.parse(productElement.dataset.images) : [];
+            
+            const cartItem = {
+                id: productId,
                 title: elements.modalTitle.textContent,
-                img: elements.modalImg.src,
                 qty: parseInt(elements.modalQtyInput.value, 10) || 1,
-                color: getModalColor()
-            });
+                color: getModalColor(),
+                product_images: productImages
+            };
+            
+            addToCart(cartItem);
             closeModal();
             showCartModal();
             elements.buyNowModal.style.display = 'flex';

@@ -1,437 +1,822 @@
 import { supabase } from './supabase-config.js';
 import { enforceAuth } from './auth-check.js';
 
-let currentTags = [];
-const tagInput = document.getElementById('tagInput');
-const tagsContainer = document.getElementById('tagsContainer');
-let currentImageFile = null;
+// Global variables for image management
+let managedImageFiles = []; // Array to hold all images with their order
+let sortableInstance = null;
+let productsSortableInstance = null;
 
 // First enforce authentication
 (async function init() {
     const isAuthenticated = await enforceAuth();
     if (!isAuthenticated) return;
 
-    // Initialize the panel only after authentication is confirmed
-    initializePanel();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('protectedContent').style.display = 'block';
+
+    // Initialize the admin panel
+    initializeAdminPanel();
 })();
 
-function initializePanel() {
-    // Add drag and drop styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .product-card {
-            cursor: move;
-            position: relative;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .product-card.sortable-ghost {
-            opacity: 0.4;
-            background: #f0f0f0;
-        }
-        .product-card.sortable-chosen {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .product-card .order-number {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            z-index: 2;
-        }
-        .save-order-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 24px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            display: none;
-            z-index: 1000;
-        }
-        .save-order-btn.visible {
-            display: block;
-        }
-        .save-order-btn:hover {
-            background: #45a049;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Add save button to the DOM
-    const saveButton = document.createElement('button');
-    saveButton.className = 'save-order-btn';
-    saveButton.textContent = 'Save Order';
-    document.body.appendChild(saveButton);
-
-    // Add image preview functionality
+function initializeAdminPanel() {
+    const productForm = document.getElementById('productForm');
     const imageInput = document.getElementById('image');
-    const imagePreview = document.getElementById('imagePreview');
-    const previewImg = document.getElementById('previewImg');
-
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            currentImageFile = file;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                imagePreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            currentImageFile = null;
-            imagePreview.style.display = 'none';
+    const uploadContainer = document.querySelector('.image-upload-container');
+    
+    // Image upload handlers
+    setupImageUpload();
+    
+    // Form submission - remove auto-submit, only validate
+    productForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // Just validate the form, don't submit
+        if (validateForm()) {
+            alert('Form is valid! Click "Save Product" to save.');
         }
     });
+    
+    // Load existing products
+    loadProducts();
+    
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = 'admin-login.html';
+    });
+}
 
-    if (tagInput) {
-        tagInput.addEventListener('keydown', async function(e) {
-            if (e.key === 'Enter') {
+function validateForm() {
+    const name = document.getElementById('name').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const category = document.getElementById('category').value;
+    const status = document.getElementById('status').value;
+    
+    if (!name) {
+        alert('Please enter a product name');
+        return false;
+    }
+    if (!description) {
+        alert('Please enter a description');
+        return false;
+    }
+    if (!category) {
+        alert('Please select a category');
+        return false;
+    }
+    if (!status) {
+        alert('Please select a status');
+        return false;
+    }
+    
+    return true;
+}
+
+function setupImageUpload() {
+    const imageInput = document.getElementById('image');
+    const uploadContainer = document.querySelector('.image-upload-container');
+    
+    // Remove any existing event listeners by cloning elements
+    const newImageInput = imageInput.cloneNode(true);
+    const newUploadContainer = uploadContainer.cloneNode(true);
+    
+    imageInput.parentNode.replaceChild(newImageInput, imageInput);
+    uploadContainer.parentNode.replaceChild(newUploadContainer, uploadContainer);
+    
+    // File input change handler
+    newImageInput.addEventListener('change', handleImageFiles);
+    
+    // Drag and drop handlers
+    newUploadContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        newUploadContainer.classList.add('dragover');
+    });
+    
+    newUploadContainer.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only remove dragover if we're leaving the container itself, not a child
+        if (!newUploadContainer.contains(e.relatedTarget)) {
+            newUploadContainer.classList.remove('dragover');
+        }
+    });
+    
+    newUploadContainer.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const tagName = tagInput.value.trim();
-                if (tagName && !currentTags.some(t => t.name === tagName)) {
-                    // Check if tag exists, if not create it
-                    let { data: existingTag } = await supabase
-                        .from('tags')
-                        .select('id, name')
-                        .eq('name', tagName)
-                        .single();
-                    if (!existingTag) {
-                        const { data: newTag } = await supabase
-                            .from('tags')
-                            .insert([{ name: tagName }])
-                            .select()
-                            .single();
-                        currentTags.push(newTag);
-                    } else {
-                        currentTags.push(existingTag);
-                    }
-                    updateTagsDisplay();
-                }
-                tagInput.value = '';
-            }
+        e.stopPropagation();
+        newUploadContainer.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        addFilesToManaged(files);
+    });
+    
+    // Click to upload - only on the text area, not the whole container
+    const uploadHint = newUploadContainer.querySelector('.upload-hint');
+    if (uploadHint) {
+        uploadHint.addEventListener('click', (e) => {
+            e.stopPropagation();
+            newImageInput.click();
         });
     }
+}
 
-    function updateTagsDisplay() {
-        tagsContainer.innerHTML = currentTags.map(tag => `
-            <div class="tag">
-                ${tag.name}
-                <button type="button" onclick="window.removeTag('${tag.id}')">&times;</button>
-            </div>
-        `).join('');
-    }
+function handleImageFiles(event) {
+    // Clear the input value to allow re-selecting the same files
+    const files = Array.from(event.target.files);
+    addFilesToManaged(files);
+    // Clear the input so the same files can be selected again
+    event.target.value = '';
+}
 
-    window.removeTag = function(tagId) {
-        currentTags = currentTags.filter(t => t.id !== tagId);
-        updateTagsDisplay();
-    };
-
-    // Load products
-    async function loadProducts() {
-        const { data: products, error } = await supabase
-            .from('products')
-            .select(`*, product_tags ( tags ( id, name ) )`)
-            .order('order', { ascending: true });
-        const productList = document.getElementById('productList');
-        productList.innerHTML = '';
-        if (error || !products) {
-            productList.innerHTML = '<p style="text-align:center; padding:50px;">Error loading products.</p>';
-            return;
+function addFilesToManaged(files) {
+    const validFiles = files.filter(file => {
+        const isValid = file.type.startsWith('image/');
+        if (!isValid) {
+            console.warn('Skipping non-image file:', file.name);
         }
-        if (products.length === 0) {
-            productList.innerHTML = '<p style="text-align:center; padding:50px;">No products found.</p>';
+        return isValid;
+    });
+    
+    if (validFiles.length === 0) {
             return;
         }
 
-        // Initialize order numbers if they don't exist
-        const needsOrderInit = products.some(p => p.order === null);
-        if (needsOrderInit) {
-            const updates = products.map((product, index) => ({
-                id: product.id,
-                order: index + 1
-            }));
-            await supabase.from('products').upsert(updates);
-            // Reload products after initialization
-            return loadProducts();
-        }
+    const newImages = validFiles.map((file, index) => ({
+        id: 'new_' + Date.now() + '_' + index + '_' + Math.random().toString(36).substr(2, 9),
+        file: file,
+        image_url: URL.createObjectURL(file),
+        order: managedImageFiles.length + index,
+        isNew: true
+    }));
+    
+    managedImageFiles.push(...newImages);
+    updateImagePreview();
+}
 
-        products.forEach((product, index) => {
-            const statusClass = product.status === 'new-arrival' ? 'status-new' : product.status === 'out-of-stock' ? 'status-out-of-stock' : '';
-            const productCard = `
-                <div class="product-card" data-id="${product.id}" data-order="${product.order}">
-                    <span class="order-number">Order: ${product.order}</span>
-                    ${product.status ? `<span class="status-badge ${statusClass}">${product.status.replace('-', ' ')}</span>` : ''}
-                    <img src="${product.image_url}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>${product.description}</p>
-                    <div class="product-tags">
-                        ${(product.product_tags || []).map(pt => `<span class="product-tag">${pt.tags.name}</span>`).join('')}
-                    </div>
-                    <button class="btn btn-edit" onclick="window.editProduct('${product.id}')">Edit</button>
-                    <button class="btn btn-danger" onclick="window.deleteProduct('${product.id}')">Delete</button>
-                </div>
-            `;
-            productList.innerHTML += productCard;
-        });
-
-        // Initialize Sortable
-        initializeSortable();
+function updateImagePreview() {
+    const imagePreview = document.getElementById('imagePreview');
+    
+    // Destroy existing sortable if it exists
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
     }
-
-    function initializeSortable() {
-        const productList = document.getElementById('productList');
-        const saveButton = document.querySelector('.save-order-btn');
-        let hasChanges = false;
-
-        new Sortable(productList, {
+    
+    // Clear existing content
+    imagePreview.innerHTML = '';
+    
+    // Add images to preview
+    managedImageFiles.forEach((imageData, index) => {
+        const imageItem = createImagePreviewItem(imageData, index);
+        imagePreview.appendChild(imageItem);
+    });
+    
+    // Initialize Sortable if there are images
+    if (managedImageFiles.length > 0) {
+        sortableInstance = new Sortable(imagePreview, {
             animation: 150,
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
-            onEnd: function() {
-                hasChanges = true;
-                saveButton.classList.add('visible');
+            dragClass: 'sortable-drag',
+            forceFallback: false,
+            fallbackOnBody: true,
+            swapThreshold: 0.65,
+            onEnd: function(evt) {
+                // Reorder the managedImageFiles array based on new positions
+                const movedItem = managedImageFiles.splice(evt.oldIndex, 1)[0];
+                managedImageFiles.splice(evt.newIndex, 0, movedItem);
                 
-                // Update order numbers
-                const cards = [...productList.getElementsByClassName('product-card')];
-                cards.forEach((card, index) => {
-                    card.dataset.order = index + 1;
-                    card.querySelector('.order-number').textContent = `Order: ${index + 1}`;
+                // Update order values
+                managedImageFiles.forEach((img, index) => {
+                    img.order = index;
                 });
+                
+                // Update the display order numbers
+                updateOrderNumbers();
             }
         });
+    }
+}
 
-        // Save button click handler
-        saveButton.addEventListener('click', async () => {
-            const cards = [...productList.getElementsByClassName('product-card')];
-            const updates = cards.map((card, index) => ({
-                id: card.dataset.id,
-                order: index + 1
-            }));
+function createImagePreviewItem(imageData, index) {
+    const imageItem = document.createElement('div');
+    imageItem.className = 'image-preview-item';
+    imageItem.setAttribute('data-id', imageData.id);
+    
+    imageItem.innerHTML = `
+        <div class="image-order">${index + 1}</div>
+        <img src="${imageData.image_url}" alt="Preview" draggable="false">
+        <div class="image-info ${imageData.isNew ? 'new' : 'existing'}">
+            ${imageData.isNew ? 'New' : 'Existing'}
+        </div>
+        <button type="button" class="remove-image" data-image-id="${imageData.id}">×</button>
+    `;
+    
+    // Add click handler for remove button
+    const removeBtn = imageItem.querySelector('.remove-image');
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const imageId = e.target.getAttribute('data-image-id');
+        removeImage(imageId);
+    });
+    
+    return imageItem;
+}
 
-            try {
-                // Get all products first
-                const { data: products } = await supabase
-                    .from('products')
-                    .select('*');
-
-                // First, update all orders to temporary negative values
-                const tempUpdates = products.map(product => ({
-                    ...product,
-                    order: -(product.order) // Use negative values to avoid conflicts
-                }));
-
-                await supabase
-                    .from('products')
-                    .upsert(tempUpdates);
-
-                // Then update to final values
-                const finalUpdates = updates.map(update => {
-                    const product = products.find(p => p.id === update.id);
-                    return {
-                        ...product,
-                        order: update.order
-                    };
-                });
-
-                const { error } = await supabase
-                    .from('products')
-                    .upsert(finalUpdates);
-
-                if (error) throw error;
-
-                hasChanges = false;
-                saveButton.classList.remove('visible');
-                alert('Order saved successfully!');
-            } catch (error) {
-                console.error('Error saving order:', error);
-                alert('Failed to save order. Please try again.');
-                // Reload to ensure consistent state
-                loadProducts();
+function updateOrderNumbers() {
+    const imageItems = document.querySelectorAll('.image-preview-item');
+    imageItems.forEach((item, index) => {
+        const orderElement = item.querySelector('.image-order');
+        if (orderElement) {
+            orderElement.textContent = index + 1;
             }
         });
     }
 
-    // Handle form submission
-    if (document.getElementById('productForm')) {
-        document.getElementById('productForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            let productId = document.getElementById('productId').value;
-            let imageUrl = '';
+function removeImage(imageId) {
+    const index = managedImageFiles.findIndex(img => img.id === imageId);
+    if (index !== -1) {
+        const imageData = managedImageFiles[index];
+        
+        // Revoke object URL if it's a new file
+        if (imageData.isNew && imageData.image_url.startsWith('blob:')) {
+            URL.revokeObjectURL(imageData.image_url);
+        }
+        
+        managedImageFiles.splice(index, 1);
+        
+        // Update order values
+        managedImageFiles.forEach((img, idx) => {
+            img.order = idx;
+        });
+        
+        updateImagePreview();
+    }
+}
 
-            try {
-                // Upload image if a new one is selected
-                if (currentImageFile) {
-                    const fileExt = currentImageFile.name.split('.').pop();
-                    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-                    const { data: uploadData, error: uploadError } = await supabase.storage
-                        .from('products')
-                        .upload(fileName, currentImageFile);
+// Global function for saving products (called from Save button)
+window.saveProduct = async function() {
+    if (!validateForm()) {
+        return;
+    }
+    
+    const productId = document.getElementById('productId').value;
+    const isEditing = !!productId;
+    
+    try {
+        // Show loading
+        document.getElementById('loading').style.display = 'flex';
+        
+        // Prepare product data
+        const productData = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value,
+            category: document.getElementById('category').value,
+            status: document.getElementById('status').value
+        };
+        
+        let savedProduct;
+        
+        if (isEditing) {
+            // Update existing product
+            const { data, error } = await supabase
+                .from('products')
+                .update(productData)
+                .eq('id', productId)
+                .select()
+                .single();
+            
+            if (error) throw error;
+            savedProduct = data;
+        } else {
+            // Get the current max order value to set the new product's order
+            const { data: maxOrderData, error: orderError } = await supabase
+                .from('products')
+                .select('order')
+                .order('order', { ascending: false })
+                .limit(1);
+            
+            // Handle the case where there are no products yet or error occurred
+            let nextOrder = 1;
+            if (!orderError && maxOrderData && maxOrderData.length > 0) {
+                nextOrder = (maxOrderData[0].order || 0) + 1;
+            }
+            
+            // Add order to product data
+            productData.order = nextOrder;
+            
+            // Create new product
+            const { data, error } = await supabase
+                .from('products')
+                .insert([productData])
+                .select()
+                .single();
+            
+            if (error) throw error;
+            savedProduct = data;
+        }
+        
+        // Handle images - this is crucial for uploading to Supabase storage
+        if (managedImageFiles.length > 0) {
+            await handleImageUploads(savedProduct.id, isEditing);
+        }
+        
+        // Reset form and reload products
+        resetForm();
+        await loadProducts();
+        
+        alert(isEditing ? 'Product updated successfully!' : 'Product created successfully!');
+        
+    } catch (error) {
+        console.error('Error saving product:', error);
+        alert('Error saving product: ' + error.message);
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+};
 
-                    if (uploadError) throw uploadError;
-
-                    // Get public URL
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('products')
-                        .getPublicUrl(fileName);
-                    
-                    imageUrl = publicUrl;
+async function handleImageUploads(productId, isEditing) {
+    console.log('Starting image upload process for product:', productId);
+    console.log('Managed image files:', managedImageFiles);
+    
+    try {
+        // Check if storage bucket exists, create if it doesn't
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+        
+        if (!bucketsError) {
+            const bucketExists = buckets.some(bucket => bucket.name === 'products');
+            
+            if (!bucketExists) {
+                console.log('Creating products bucket...');
+                const { data: bucketData, error: createBucketError } = await supabase.storage.createBucket('products', {
+                    public: true,
+                    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
+                    fileSizeLimit: 5242880 // 5MB
+                });
+                
+                if (createBucketError) {
+                    console.error('Error creating bucket:', createBucketError);
+                    // Continue anyway, bucket might exist but not be listed
                 }
-
-                const product = {
-                    name: document.getElementById('name').value,
-                    category: document.getElementById('category').value,
-                    image_url: imageUrl || document.getElementById('image').dataset.currentUrl,
-                    description: document.getElementById('description').value,
-                    status: document.getElementById('status').value
-                };
-
-                if (productId) {
-                    // Update existing product
-                    const { error } = await supabase
-                        .from('products')
-                        .update(product)
-                        .eq('id', productId);
-                    if (error) throw error;
-                    // Update tags
-                    await supabase
-                        .from('product_tags')
-                        .delete()
-                        .eq('product_id', productId);
+            }
+        }
+        
+        // If editing, first delete all existing images from database (not storage yet)
+        if (isEditing) {
+            const { error: deleteError } = await supabase
+                .from('product_images')
+                .delete()
+                .eq('product_id', productId);
+            
+            if (deleteError) {
+                console.error('Error deleting existing images:', deleteError);
+                throw deleteError;
+            }
+        }
+        
+        // Upload new images and create database records
+        for (const [index, imageData] of managedImageFiles.entries()) {
+            let imageUrl = imageData.image_url;
+            
+            console.log(`Processing image ${index + 1}:`, imageData);
+            
+            // If it's a new file (has a File object), upload it to Supabase storage
+            if (imageData.isNew && imageData.file) {
+                console.log('Uploading new image file to storage...');
+                
+                // Create a unique filename
+                const fileExtension = imageData.file.name.split('.').pop();
+                const fileName = `product_${productId}_${Date.now()}_${index}.${fileExtension}`;
+                
+                console.log('Uploading with filename:', fileName);
+                
+                // Upload to Supabase storage
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('products')
+                    .upload(fileName, imageData.file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (uploadError) {
+                    console.error('Storage upload error:', uploadError);
+                    
+                    // If bucket doesn't exist error, try to create it
+                    if (uploadError.message && uploadError.message.includes('Bucket not found')) {
+                        console.log('Bucket not found, creating it...');
+                        const { error: createError } = await supabase.storage.createBucket('products', {
+                            public: true
+                        });
+                        
+                        if (!createError) {
+                            // Retry upload
+                            const { data: retryData, error: retryError } = await supabase.storage
+                                .from('products')
+                                .upload(fileName, imageData.file, {
+                                    cacheControl: '3600',
+                                    upsert: false
+                                });
+                            
+                            if (retryError) {
+                                throw retryError;
+                            }
+                            console.log('Retry upload successful:', retryData);
+                        } else {
+                            throw uploadError;
+                        }
+                    } else {
+                        throw uploadError;
+                    }
                 } else {
-                    // Get the highest order number
-                    const { data: lastProduct } = await supabase
-                        .from('products')
-                        .select('order')
-                        .order('order', { ascending: false })
-                        .limit(1)
-                        .single();
-                    
-                    // Add new product with next order number
-                    product.order = (lastProduct?.order || 0) + 1;
-                    
-                    const { data, error } = await supabase
-                        .from('products')
-                        .insert([product])
-                        .select()
-                        .single();
-                    if (error) throw error;
-                    productId = data.id;
+                    console.log('Upload successful:', uploadData);
                 }
+                
+                // Get the public URL
+                const { data: urlData } = supabase.storage
+                    .from('products')
+                    .getPublicUrl(fileName);
+                
+                imageUrl = urlData.publicUrl;
+                console.log('Generated public URL:', imageUrl);
+                
+                // Revoke the blob URL since we don't need it anymore
+                URL.revokeObjectURL(imageData.image_url);
+            }
+            
+            // Create database record for the image
+            console.log('Creating database record for image...');
+            const { error: dbError } = await supabase
+                .from('product_images')
+                .insert({
+                    product_id: productId,
+                    image_url: imageUrl,
+                    order: index
+                });
+            
+            if (dbError) {
+                console.error('Database insert error:', dbError);
+                throw dbError;
+            }
+            
+            console.log(`Image ${index + 1} processed successfully`);
+        }
+        
+        console.log('All images uploaded successfully');
+        
+    } catch (error) {
+        console.error('Error in handleImageUploads:', error);
+        throw error;
+    }
+}
 
-                // Add tags
-                if (currentTags.length > 0) {
-                    const { error } = await supabase
-                        .from('product_tags')
-                        .insert(
-                            currentTags.map(tag => ({
-                                product_id: productId,
-                                tag_id: tag.id
-                            }))
-                        );
-                    if (error) throw error;
-                }
-
+function resetForm() {
                 document.getElementById('productForm').reset();
                 document.getElementById('productId').value = '';
-                currentTags = [];
-                currentImageFile = null;
-                imagePreview.style.display = 'none';
-                updateTagsDisplay();
-                loadProducts();
-            } catch (error) {
-                alert('Error saving product: ' + (error.message || error));
-            }
-        });
-    }
+    
+    // Clear managed images
+    managedImageFiles.forEach(img => {
+        if (img.isNew && img.image_url.startsWith('blob:')) {
+            URL.revokeObjectURL(img.image_url);
+        }
+    });
+    managedImageFiles = [];
+    
+    // Clear image preview
+    updateImagePreview();
+    
+    // Re-setup image upload to ensure clean state
+    setupImageUpload();
+}
 
-    // Edit product
-    window.editProduct = async function(id) {
+async function loadProducts() {
+    try {
+        const { data: products, error } = await supabase
+            .from('products')
+            .select(`
+                *,
+                product_images (
+                    id,
+                    image_url,
+                    "order"
+                )
+            `)
+            .order('order', { ascending: true })
+            .order('order', { foreignTable: 'product_images', ascending: true });
+
+        if (error) throw error;
+
+        displayProducts(products || []);
+    } catch (error) {
+        console.error('Error loading products:', error);
+        alert('Error loading products: ' + error.message);
+    }
+}
+
+function displayProducts(products) {
+    const productList = document.getElementById('productList');
+    
+    if (products.length === 0) {
+        productList.innerHTML = '<p>No products found. Add your first product above!</p>';
+        return;
+    }
+    
+    productList.innerHTML = '<h2 style="margin-bottom: 30px; color: #333;">Existing Products</h2>';
+    
+    // Create container for products with grid layout
+    const productsContainer = document.createElement('div');
+    productsContainer.id = 'productsContainer';
+    productsContainer.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 20px 0;
+    `;
+    
+    products.forEach((product, index) => {
+        const sortedImages = (product.product_images || []).sort((a, b) => (a.order || 0) - (b.order || 0));
+        const primaryImage = sortedImages[0]?.image_url || 'img/product-img/fallback.jpg';
+        const imageCount = sortedImages.length;
+        
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card';
+        productCard.setAttribute('data-product-id', product.id);
+        productCard.setAttribute('data-product-index', index);
+        productCard.style.cssText = `
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid #e1e5e9;
+            cursor: grab;
+        `;
+        
+        // Add hover effect
+        productCard.addEventListener('mouseenter', () => {
+            productCard.style.transform = 'translateY(-5px)';
+            productCard.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+        });
+        
+        productCard.addEventListener('mouseleave', () => {
+            productCard.style.transform = 'translateY(0)';
+            productCard.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.08)';
+        });
+        
+        productCard.innerHTML = `
+            <div class="drag-handle" style="
+                position: absolute; 
+                top: 15px; 
+                left: 15px; 
+                cursor: grab; 
+                padding: 8px; 
+                background: rgba(45, 44, 52, 0.1); 
+                border-radius: 6px; 
+                font-size: 16px; 
+                color: #2d2c34;
+                z-index: 10;
+                transition: background 0.2s;
+            ">≡</div>
+            <div class="status-badge status-${product.status}" style="
+                position: absolute; 
+                top: 15px; 
+                right: 15px; 
+                padding: 6px 12px; 
+                border-radius: 20px; 
+                font-size: 0.75rem; 
+                font-weight: 600; 
+                text-transform: uppercase; 
+                letter-spacing: 0.5px;
+                ${getStatusBadgeStyles(product.status)}
+            ">${product.status.replace('-', ' ')}</div>
+            <img src="${primaryImage}" alt="${product.name}" 
+                 onerror="this.src='img/product-img/fallback.jpg'" 
+                 style="
+                     width: 100%; 
+                     height: 200px; 
+                     object-fit: cover; 
+                     border-radius: 8px; 
+                     margin-bottom: 15px;
+                     margin-top: 25px;
+                 ">
+            <h3 style="
+                margin: 0 0 10px 0; 
+                font-size: 1.3rem; 
+                color: #2d2c34; 
+                font-weight: 600;
+                line-height: 1.3;
+            ">${product.name}</h3>
+            <p style="
+                color: #666; 
+                margin-bottom: 15px; 
+                line-height: 1.5; 
+                font-size: 0.95rem;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            ">${product.description}</p>
+            <div class="product-meta" style="
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                margin-bottom: 20px; 
+                font-size: 0.9rem; 
+                color: #888;
+                padding: 10px 0;
+                border-top: 1px solid #f0f0f0;
+            ">
+                <span style="
+                    background: #f8f9fa; 
+                    padding: 4px 8px; 
+                    border-radius: 4px; 
+                    font-weight: 500;
+                ">Category: ${product.category}</span>
+                <span class="image-count" style="
+                    background: #e3f2fd; 
+                    color: #1976d2; 
+                    padding: 4px 8px; 
+                    border-radius: 4px; 
+                    font-weight: 500;
+                ">${imageCount} image${imageCount !== 1 ? 's' : ''}</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-edit" onclick="editProduct('${product.id}')" style="
+                    background: #007bff; 
+                    color: white; 
+                    border: none; 
+                    padding: 10px 20px; 
+                    border-radius: 6px; 
+                    font-size: 0.9rem; 
+                    font-weight: 500; 
+                    cursor: pointer; 
+                    transition: all 0.2s; 
+                    flex: 1;
+                ">Edit</button>
+                <button class="btn btn-danger" onclick="deleteProduct('${product.id}')" style="
+                    background: #dc3545; 
+                    color: white; 
+                    border: none; 
+                    padding: 10px 20px; 
+                    border-radius: 6px; 
+                    font-size: 0.9rem; 
+                    font-weight: 500; 
+                    cursor: pointer; 
+                    transition: all 0.2s; 
+                    flex: 1;
+                ">Delete</button>
+            </div>
+        `;
+        
+        // Add drag handle hover effect
+        const dragHandle = productCard.querySelector('.drag-handle');
+        dragHandle.addEventListener('mouseenter', () => {
+            dragHandle.style.background = 'rgba(45, 44, 52, 0.2)';
+        });
+        dragHandle.addEventListener('mouseleave', () => {
+            dragHandle.style.background = 'rgba(45, 44, 52, 0.1)';
+        });
+        
+        productsContainer.appendChild(productCard);
+    });
+    
+    productList.appendChild(productsContainer);
+    
+    // Initialize products drag & drop (without order column updates)
+    initializeProductsDragDrop(productsContainer);
+}
+
+function getStatusBadgeStyles(status) {
+    switch(status) {
+        case 'new-arrival':
+            return 'background: #d4edda; color: #155724;';
+        case 'out-of-stock':
+            return 'background: #f8d7da; color: #721c24;';
+        case 'in-stock':
+        default:
+            return 'background: #d1ecf1; color: #0c5460;';
+    }
+}
+
+function initializeProductsDragDrop(container) {
+    // Destroy existing sortable if it exists
+    if (productsSortableInstance) {
+        productsSortableInstance.destroy();
+        productsSortableInstance = null;
+    }
+    
+    productsSortableInstance = new Sortable(container, {
+        animation: 200,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        handle: '.drag-handle',
+        onEnd: async function(evt) {
+            try {
+                console.log(`Product moved from position ${evt.oldIndex} to ${evt.newIndex}`);
+                
+                // Get all product cards in their new order
+                const productCards = Array.from(container.children);
+                
+                // Update order in database
+                const updatePromises = productCards.map((card, index) => {
+                    const productId = card.getAttribute('data-product-id');
+                    return supabase
+                        .from('products')
+                        .update({ order: index + 1 }) // Start from 1 instead of 0
+                        .eq('id', productId);
+                });
+                
+                await Promise.all(updatePromises);
+                console.log('Product order updated successfully');
+                
+                // Update visual order numbers
+                productCards.forEach((card, index) => {
+                    card.setAttribute('data-product-index', index);
+                });
+                
+            } catch (error) {
+                console.error('Error updating product order:', error);
+                alert('Error updating product order. Reloading products...');
+                // Reload products to revert to database order
+                loadProducts();
+            }
+        }
+    });
+}
+
+// Global functions for product actions
+window.editProduct = async function(productId) {
+    try {
+        document.getElementById('loading').style.display = 'flex';
+        
         const { data: product, error } = await supabase
             .from('products')
-            .select(`*, product_tags ( tags ( id, name ) )`)
-            .eq('id', id)
+            .select(`
+                *,
+                product_images (
+                    id,
+                    image_url,
+                    "order"
+                )
+            `)
+            .eq('id', productId)
             .single();
-        if (error) {
-            alert('Error loading product.');
-            return;
-        }
+        
+        if (error) throw error;
+        
+        // Populate form
         document.getElementById('productId').value = product.id;
         document.getElementById('name').value = product.name;
-        document.getElementById('category').value = product.category;
-        document.getElementById('image').dataset.currentUrl = product.image_url;
         document.getElementById('description').value = product.description;
-        document.getElementById('status').value = product.status || 'in-stock';
-        currentTags = (product.product_tags || []).map(pt => pt.tags);
-        updateTagsDisplay();
+        document.getElementById('category').value = product.category;
+        document.getElementById('status').value = product.status;
+        
+        // Set images
+        managedImageFiles = (product.product_images || [])
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .map(img => ({
+                id: img.id,
+                image_url: img.image_url,
+                order: img.order || 0,
+                isNew: false
+            }));
+        
+        updateImagePreview();
+        
+        // Scroll to form
+        document.querySelector('.product-form').scrollIntoView({ behavior: 'smooth' });
+        
+    } catch (error) {
+        console.error('Error loading product for edit:', error);
+        alert('Error loading product: ' + error.message);
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+};
 
-        // Show current image preview
-        if (product.image_url) {
-            const imagePreview = document.getElementById('imagePreview');
-            const previewImg = document.getElementById('previewImg');
-            previewImg.src = product.image_url;
-            imagePreview.style.display = 'block';
-        }
-    };
-
-    // Delete product
-    window.deleteProduct = async function(id) {
-        if (confirm('Are you sure you want to delete this product?')) {
-            try {
-                // Get the order of the deleted product
-                const { data: deletedProduct } = await supabase
-                    .from('products')
-                    .select('order')
-                    .eq('id', id)
-                    .single();
-
-                // Delete the product
+window.deleteProduct = async function(productId) {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        document.getElementById('loading').style.display = 'flex';
+        
                 const { error } = await supabase
                     .from('products')
                     .delete()
-                    .eq('id', id);
+            .eq('id', productId);
                 
                 if (error) throw error;
 
-                // Update order numbers for remaining products
-                if (deletedProduct) {
-                    const { data: remainingProducts } = await supabase
-                        .from('products')
-                        .select('id, order')
-                        .gt('order', deletedProduct.order)
-                        .order('order', { ascending: true });
-
-                    if (remainingProducts && remainingProducts.length > 0) {
-                        const updates = remainingProducts.map(product => ({
-                            id: product.id,
-                            order: product.order - 1
-                        }));
-
-                        await supabase
-                            .from('products')
-                            .upsert(updates);
-                    }
-                }
-
-                loadProducts();
+        await loadProducts();
+        alert('Product deleted successfully!');
+        
             } catch (error) {
                 console.error('Error deleting product:', error);
-                alert('Error deleting product. Please try again.');
-            }
-        }
-    };
-
-    // Initial load
-    if (document.getElementById('productList')) {
-        loadProducts();
+        alert('Error deleting product: ' + error.message);
+    } finally {
+        document.getElementById('loading').style.display = 'none';
     }
-} 
+}; 

@@ -47,6 +47,7 @@ function initializeTable() {
     // Fetch data and load into table
     async function loadCustomerData() {
         try {
+            // Fetch customers, orders, order_items, and for each product, fetch product_images
             const { data: customers, error: customerError } = await supabase
                 .from('customers')
                 .select(`
@@ -55,7 +56,7 @@ function initializeTable() {
                         *,
                         order_items (
                             *,
-                            product:products(name, image_url)
+                            product:products(id, name, product_images (id, image_url, "order"))
                         )
                     )
                 `)
@@ -68,27 +69,36 @@ function initializeTable() {
                 return;
             }
 
+            // Map data for Tabulator
             const customerData = customers.map(customer => ({
                 name: customer.name,
                 email: customer.email,
                 phone: customer.phone,
                 address: customer.address,
-                _children: customer.orders.map(order => ({
-                    name: `Order #${order.id.substring(0, 8)}`,
+                _children: (customer.orders || []).map(order => ({
+                    name: `Order #${order.id ? order.id.substring(0, 8) : ''}`,
                     email: `Status: ${order.status}`,
-                    phone: `Date: ${new Date(order.placed_at).toLocaleString()}`,
-                    address: `Total Items: ${order.order_items.length}`,
-                    _children: order.order_items.map(item => ({
-                        name: item.product ? item.product.name : 'Product not found',
-                        email: `Quantity: ${item.quantity}`,
-                        phone: item.product_color ? 
-                            `<div style="display:flex;align-items:center;gap:6px;">
-                                <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background-color:${item.product_color};border:1px solid rgba(0,0,0,0.1);"></span>
-                                ${item.product_color}
-                            </div>` : 
-                            'N/A',
-                        address: item.product?.image_url || ''
-                    }))
+                    phone: `Date: ${order.placed_at ? new Date(order.placed_at).toLocaleString() : ''}`,
+                    address: `Total Items: ${order.order_items ? order.order_items.length : 0}`,
+                    _children: (order.order_items || []).map(item => {
+                        // Get the first image from product_images (lowest order)
+                        let imageUrl = '';
+                        if (item.product && Array.isArray(item.product.product_images) && item.product.product_images.length > 0) {
+                            const sortedImages = item.product.product_images.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+                            imageUrl = sortedImages[0]?.image_url || '';
+                        }
+                        return {
+                            name: item.product ? item.product.name : 'Product not found',
+                            email: `Quantity: ${item.quantity}`,
+                            phone: item.product_color ? 
+                                `<div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="display:inline-block;width:14px;height:14px;border-radius:3px;background-color:${item.product_color};border:1px solid rgba(0,0,0,0.1);"></span>
+                                    ${item.product_color}
+                                </div>` : 
+                                'N/A',
+                            address: imageUrl
+                        };
+                    })
                 }))
             }));
 

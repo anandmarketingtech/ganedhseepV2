@@ -86,12 +86,19 @@ class EmailService {
 
     // Format order items as array for EmailJS template
     formatOrderItemsForTemplate(items) {
-        return items.map(item => ({
-            name: item.title,
-            units: item.qty,
-            color: item.color || 'Not specified',
-            image_url: item.img || '' // Use the product image
-        }));
+        return items.map(item => {
+            let image_url = '';
+            if (Array.isArray(item.product_images) && item.product_images.length > 0) {
+                const sortedImages = item.product_images.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+                image_url = sortedImages[0]?.image_url || '';
+            }
+            return {
+                name: item.title,
+                units: item.qty,
+                color: item.color || 'Not specified',
+                image_url
+            };
+        });
     }
 
     // Keep the old method for backward compatibility (if needed elsewhere)
