@@ -1,4 +1,4 @@
-import { supabase } from './supabase-config.js';
+import { supabase, supabaseUrl, supabaseKey } from './supabase-config.js';
 import { enforceAuth } from './auth-check.js';
 
 // Global variables for image management
@@ -45,11 +45,29 @@ function initializeAdminPanel() {
     });
 }
 
-function validateForm() {
+async function validateForm() {
     const name = document.getElementById('name').value.trim();
     const description = document.getElementById('description').value.trim();
     const category = document.getElementById('category').value;
     const status = document.getElementById('status').value;
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data?.user) {
+      console.error('Not authenticated:', error);
+      return;
+    }
+    
+    console.log('User is:', data.user);
+    
+    // Proceed to upload
+    const uploadResult = await supabase.storage
+      .from('products')
+      .upload(`product_${Date.now()}.jpg`, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    console.log(uploadResult);
     
     if (!name) {
         alert('Please enter a product name');
@@ -340,27 +358,6 @@ async function handleImageUploads(productId, isEditing) {
     console.log('Managed image files:', managedImageFiles);
     
     try {
-        // Check if storage bucket exists, create if it doesn't
-        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-        
-        if (!bucketsError) {
-            const bucketExists = buckets.some(bucket => bucket.name === 'products');
-            
-            if (!bucketExists) {
-                console.log('Creating products bucket...');
-                const { data: bucketData, error: createBucketError } = await supabase.storage.createBucket('products', {
-                    public: true,
-                    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
-                    fileSizeLimit: 5242880 // 5MB
-                });
-                
-                if (createBucketError) {
-                    console.error('Error creating bucket:', createBucketError);
-                    // Continue anyway, bucket might exist but not be listed
-                }
-            }
-        }
-        
         // If editing, first delete all existing images from database (not storage yet)
         if (isEditing) {
             const { error: deleteError } = await supabase
@@ -392,54 +389,57 @@ async function handleImageUploads(productId, isEditing) {
                 
                 // Upload to Supabase storage
                 const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('products')
-                    .upload(fileName, imageData.file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
+                .from('products')
+                .upload(fileName, imageData.file, {
+                  contentType: imageData.file.type,
+                  cacheControl: '3600',
+                  upsert: false,
+                  headers: {
+                    Authorization: `Bearer ${supabaseKey}`,
+                    'X-Client-Info': 'supabase-js-web/2.50.2'
+                  }
+              
+                });
                 
                 if (uploadError) {
                     console.error('Storage upload error:', uploadError);
                     
-                    // If bucket doesn't exist error, try to create it
+                    // Handle specific error cases
                     if (uploadError.message && uploadError.message.includes('Bucket not found')) {
-                        console.log('Bucket not found, creating it...');
-                        const { error: createError } = await supabase.storage.createBucket('products', {
-                            public: true
-                        });
-                        
-                        if (!createError) {
-                            // Retry upload
-                            const { data: retryData, error: retryError } = await supabase.storage
-                                .from('products')
-                                .upload(fileName, imageData.file, {
-                                    cacheControl: '3600',
-                                    upsert: false
-                                });
-                            
-                            if (retryError) {
-                                throw retryError;
-                            }
-                            console.log('Retry upload successful:', retryData);
-                        } else {
-                            throw uploadError;
-                        }
+                        throw new Error(
+                            'Storage bucket "products" not found. Please create it in your Supabase dashboard:\n' +
+                            '1. Go to Storage in your Supabase dashboard\n' +
+                            '2. Create a new bucket named "products"\n' +
+                            '3. Make it public\n' +
+                            '4. Set appropriate file size limits and allowed file types'
+                        );
+                    } else if (uploadError.message && (uploadError.message.includes('row-level security policy') || uploadError.message.includes('Unauthorized') || uploadError.code === 'DatabaseError')) {
+                        throw new Error(
+                            'Storage permissions error. You need to set up storage policies:\n\n' +
+                            '🔧 QUICK FIX:\n' +
+                            '1. Go to your Supabase Dashboard\n' +
+                            '2. Storage > Policies\n' +
+                            '3. Click on "products" bucket\n' +
+                            '4. Create these 2 essential policies:\n\n' +
+                            '   📤 UPLOAD Policy:\n' +
+                            '   • Policy name: "Allow authenticated uploads"\n' +
+                            '   • Operation: INSERT\n' +
+                            '   • Target roles: authenticated\n' +
+                            '   • Policy: ((bucket_id = \'products\'::text) AND (auth.role() = \'authenticated\'::text))\n\n' +
+                            '   👁️ VIEW Policy:\n' +
+                            '   • Policy name: "Allow public viewing"\n' +
+                            '   • Operation: SELECT\n' +
+                            '   • Target roles: public\n' +
+                            '   • Policy: (bucket_id = \'products\'::text)\n\n' +
+                            '5. Save both policies and try again\n\n' +
+                            'For detailed instructions, see STORAGE_SETUP.md'
+                        );
                     } else {
                         throw uploadError;
                     }
-                } else {
-                    console.log('Upload successful:', uploadData);
                 }
                 
-                // Get the public URL
-                const { data: urlData } = supabase.storage
-                    .from('products')
-                    .getPublicUrl(fileName);
-                
-                imageUrl = urlData.publicUrl;
-                console.log('Generated public URL:', imageUrl);
-                
-                // Revoke the blob URL since we don't need it anymore
+                imageUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
                 URL.revokeObjectURL(imageData.image_url);
             }
             
