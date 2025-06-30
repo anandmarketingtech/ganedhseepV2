@@ -36,7 +36,72 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let cart = [];
-    let currentKeyboardHandler = null; // Store keyboard handler for cleanup
+    let currentKeyboardHandler = null;
+    let allProducts = []; // Store all products for pagination
+    let currentPage = 0;
+    let productsPerPage = 12; // Load products in batches
+    let isLoading = false;
+    let hasMoreProducts = true;
+    let imageObserver = null;
+
+    // --- LAZY LOADING UTILITIES ---
+    const createImageObserver = () => {
+        if ('IntersectionObserver' in window) {
+            imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const src = img.dataset.src;
+                        
+                        if (src) {
+                            // Create a new image to preload
+                            const newImg = new Image();
+                            newImg.onload = () => {
+                                img.src = src;
+                                img.classList.remove('lazy-loading');
+                                img.classList.add('lazy-loaded');
+                            };
+                            newImg.onerror = () => {
+                                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjZjhmOWZhIi8+CjxyZWN0IHg9Ijc1IiB5PSI3NSIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNlOWVjZWYiIHN0cm9rZT0iI2RlZTJlNiIgc3Ryb2tlLXdpZHRoPSIyIiByeD0iOCIvPgo8Y2lyY2xlIGN4PSIxMTAiIGN5PSIxMTAiIHI9IjE1IiBmaWxsPSIjYWRiNWJkIi8+CjxwYXRoIGQ9Ik03NSAyMDBMMTI1IDE1MEwxNzUgMTgwTDIyNSAxMzBMMjI1IDIyNUw3NSAyMjVaIiBmaWxsPSIjY2VkNGRhIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPlByb2R1Y3QgSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo=';
+                                img.classList.remove('lazy-loading');
+                                img.classList.add('lazy-error');
+                            };
+                            newImg.src = src;
+                        }
+                        
+                        observer.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: '50px 0px',
+                threshold: 0.01
+            });
+        }
+        return imageObserver;
+    };
+
+    const observeImage = (img) => {
+        if (imageObserver) {
+            imageObserver.observe(img);
+        } else {
+            // Fallback for browsers without IntersectionObserver
+            img.src = img.dataset.src || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjZjhmOWZhIi8+CjxyZWN0IHg9Ijc1IiB5PSI3NSIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNlOWVjZWYiIHN0cm9rZT0iI2RlZTJlNiIgc3Ryb2tlLXdpZHRoPSIyIiByeD0iOCIvPgo8Y2lyY2xlIGN4PSIxMTAiIGN5PSIxMTAiIHI9IjE1IiBmaWxsPSIjYWRiNWJkIi8+CjxwYXRoIGQ9Ik03NSAyMDBMMTI1IDE1MEwxNzUgMTgwTDIyNSAxMzBMMjI1IDIyNUw3NSAyMjVaIiBmaWxsPSIjY2VkNGRhIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPlByb2R1Y3QgSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo=';
+        }
+    };
+
+    // Create skeleton loader HTML
+    const createSkeletonLoader = () => `
+        <div class="skeleton-loader">
+            <div class="skeleton-item">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-content">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-button"></div>
+                </div>
+            </div>
+        </div>
+    `;
 
     // --- UTILITY FUNCTIONS ---
     const getColorsFromSwatch = (containerId) => {
@@ -120,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 return `
                 <div class="cart-item" data-idx="${idx}">
-                   <img src="${primaryImage}" alt="${item.title}">
+                   <img src="${primaryImage}" alt="${item.title}" loading="lazy">
                     <div class="cart-item-details">
                         <div class="cart-item-title">${item.title}</div>
                         <div class="cart-item-meta">
@@ -168,8 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setupModalColors();
         
+        // Fast modal opening with smooth animation
         document.body.classList.add('modal-open');
         elements.productModal.style.display = 'flex';
+        
+        // Force reflow before adding show class for smooth animation
+        requestAnimationFrame(() => {
+            elements.productModal.classList.add('show');
+        });
     };
 
     const setupModalImageGallery = (primaryImage, allImages = []) => {
@@ -194,10 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 align-items: center;
                 justify-content: center;
                 margin-bottom: 15px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             `;
             
             const mainImg = document.createElement('img');
-            mainImg.src = primaryImage;
+            // Use lazy loading for modal images too
+            const placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4=';
+            
+            mainImg.src = placeholder;
             mainImg.alt = 'Product';
             mainImg.style.cssText = `
                 max-width: 100%;
@@ -205,7 +280,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 object-fit: contain;
                 border-radius: 8px;
                 transition: opacity 0.3s;
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite;
             `;
+            
+            // Show loading state
+            mainImg.classList.add('loading');
+            
+            // Preload the actual image
+            const imgLoader = new Image();
+            imgLoader.onload = () => {
+                mainImg.src = primaryImage;
+                mainImg.style.animation = 'none';
+                mainImg.style.background = 'transparent';
+                mainImg.classList.remove('loading');
+            };
+            imgLoader.onerror = () => {
+                mainImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjZjhmOWZhIi8+CjxyZWN0IHg9Ijc1IiB5PSI3NSIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNlOWVjZWYiIHN0cm9rZT0iI2RlZTJlNiIgc3Ryb2tlLXdpZHRoPSIyIiByeD0iOCIvPgo8Y2lyY2xlIGN4PSIxMTAiIGN5PSIxMTAiIHI9IjE1IiBmaWxsPSIjYWRiNWJkIi8+CjxwYXRoIGQ9Ik03NSAyMDBMMTI1IDE1MEwxNzUgMTgwTDIyNSAxMzBMMjI1IDIyNUw3NSAyMjVaIiBmaWxsPSIjY2VkNGRhIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPlByb2R1Y3QgSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo=';
+                mainImg.style.animation = 'none';
+                mainImg.style.background = '#f8f9fa';
+                mainImg.classList.remove('loading');
+            };
+            // Load immediately for fastest experience
+            imgLoader.src = primaryImage;
             
             // Navigation arrows
             const prevBtn = document.createElement('button');
@@ -325,9 +423,40 @@ document.addEventListener('DOMContentLoaded', () => {
             modalImageContainer.appendChild(thumbnailDiv);
             
         } else {
-            // Single image display
-            modalImg.src = primaryImage;
-            modalImg.style.display = 'block';
+            // Single image - use optimized fast loading
+            const imageWrapper = document.createElement('div');
+            imageWrapper.className = 'fast-modal-image-wrapper';
+            
+            const img = document.createElement('img');
+            img.className = 'fast-modal-image loading';
+            img.alt = 'Product';
+            
+            const placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4=';
+            img.src = placeholder;
+            
+            // Spinner
+            const loader = document.createElement('div');
+            loader.className = 'fast-modal-image-loader';
+            loader.innerHTML = '<div class="fast-spinner"></div>';
+            
+            imageWrapper.appendChild(img);
+            imageWrapper.appendChild(loader);
+            modalImageContainer.appendChild(imageWrapper);
+            
+            // Load actual image
+            const imgLoader = new Image();
+            imgLoader.onload = () => {
+                img.src = primaryImage;
+                img.classList.remove('loading');
+                // Update the main modal image reference
+                elements.modalImg = img;
+            };
+            imgLoader.onerror = () => {
+                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDMwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjZjhmOWZhIi8+CjxyZWN0IHg9Ijc1IiB5PSI3NSIgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNlOWVjZWYiIHN0cm9rZT0iI2RlZTJlNiIgc3Ryb2tlLXdpZHRoPSIyIiByeD0iOCIvPgo8Y2lyY2xlIGN4PSIxMTAiIGN5PSIxMTAiIHI9IjE1IiBmaWxsPSIjYWRiNWJkIi8+CjxwYXRoIGQ9Ik03NSAyMDBMMTI1IDE1MEwxNzUgMTgwTDIyNSAxMzBMMjI1IDIyNUw3NSAyMjVaIiBmaWxsPSIjY2VkNGRhIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNmM3NTdkIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPlByb2R1Y3QgSW1hZ2U8L3RleHQ+Cjwvc3ZnPgo=';
+                img.classList.remove('loading');
+                elements.modalImg = img;
+            };
+            imgLoader.src = primaryImage;
         }
     };
 
@@ -340,8 +469,16 @@ document.addEventListener('DOMContentLoaded', () => {
             currentKeyboardHandler = null;
         }
         
-        elements.productModal.style.display = 'none';
-        document.body.classList.remove('modal-open');
+        // Fast modal closing with smooth animation
+        elements.productModal.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (!elements.productModal.classList.contains('show')) {
+                document.body.classList.remove('modal-open');
+                elements.productModal.style.display = 'none';
+            }
+        }, 200);
     };
 
     const setupModalColors = () => {
@@ -407,57 +544,192 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // --- API & DATA LOADING ---
-    async function loadProducts() {
+    async function loadProducts(reset = true) {
         if (!elements.productsContainer) return;
+        if (isLoading) return;
 
-        // Reset any previous styles
-        elements.productsContainer.removeAttribute('style');
-        elements.productsContainer.className = 'row sonar-portfolio';
-        
-        // Show a loading message while fetching products
-        elements.productsContainer.innerHTML = `
-            <div class="container-fluid">
-                <div style="width: 100%; text-align: center; padding: 2em;">Loading products...</div>
-            </div>
-        `;
+        isLoading = true;
+
+        if (reset) {
+            // Reset pagination state
+            currentPage = 0;
+            allProducts = [];
+            hasMoreProducts = true;
+            
+            // Reset container styles
+            elements.productsContainer.removeAttribute('style');
+            elements.productsContainer.className = 'row sonar-portfolio';
+            
+            // Show skeleton loaders
+            showSkeletonLoaders();
+        }
 
         try {
-            const { data: products, error } = await supabase
-                .from('products')
-                .select(`
-                    *,
-                    product_images (
-                        id,
-                        image_url,
-                        "order"
-                    )
-                `)
-                .order('order', { ascending: true })
-                .order('order', { foreignTable: 'product_images', ascending: true });
-            if (error) throw error;
+            // Calculate offset for pagination
+            const offset = currentPage * productsPerPage;
+            
+            // First, try the full query with product_images
+            let products, error, count;
+            
+            try {
+                const response = await supabase
+                    .from('products')
+                    .select(`
+                        *,
+                        product_images (
+                            id,
+                            image_url,
+                            "order"
+                        )
+                    `, { count: 'exact' })
+                    .order('order', { ascending: true })
+                    .order('order', { foreignTable: 'product_images', ascending: true })
+                    .range(offset, offset + productsPerPage - 1);
+                
+                products = response.data;
+                error = response.error;
+                count = response.count;
+                
+                console.log('Full query response:', { products, error, count });
+            } catch (fullQueryError) {
+                console.warn('Full query failed, trying simple query:', fullQueryError);
+                
+                // Fallback: try simple query without product_images
+                const simpleResponse = await supabase
+                    .from('products')
+                    .select('*', { count: 'exact' })
+                    .range(offset, offset + productsPerPage - 1);
+                
+                products = simpleResponse.data;
+                error = simpleResponse.error;
+                count = simpleResponse.count;
+                
+                console.log('Simple query response:', { products, error, count });
+                
+                // If we got products but no images, add empty product_images array
+                if (products && products.length > 0) {
+                    products = products.map(product => ({
+                        ...product,
+                        product_images: []
+                    }));
+                }
+            }
+
+            // Additional debugging: check if we have any products at all
+            if ((!products || products.length === 0) && offset === 0) {
+                console.log('No products found, checking database...');
+                try {
+                    const testResponse = await supabase
+                        .from('products')
+                        .select('id, name', { count: 'exact' })
+                        .limit(1);
+                    
+                    console.log('Test query result:', testResponse);
+                    
+                    if (testResponse.count === 0) {
+                        console.log('Database contains no products');
+                    } else {
+                        console.log(`Database contains ${testResponse.count} products total`);
+                    }
+                } catch (testError) {
+                    console.error('Test query failed:', testError);
+                }
+            }
+
+            if (error) {
+                console.error('Database error:', error);
+                throw error;
+            }
 
             // Debug: Log the products data structure
-            console.log('Products loaded from database:', products);
+            console.log(`Loaded ${products?.length || 0} products (page ${currentPage + 1})`);
+            console.log('Final products data:', products);
+
+            if (reset) {
+                allProducts = products || [];
+            } else {
+                allProducts = [...allProducts, ...(products || [])];
+            }
+
+            // Check if there are more products to load
+            hasMoreProducts = (products?.length || 0) === productsPerPage && allProducts.length < (count || 0);
 
             // Render products
-            renderProducts(products);
+            await renderProducts(allProducts, reset);
+
+            currentPage++;
+
         } catch (error) {
             console.error('Error loading products:', error);
-            elements.productsContainer.innerHTML = `
-                <div class="container-fluid">
-                    <div style="width: 100%; text-align: center; padding: 2em;">Error loading products. Please try again later.</div>
-                </div>
-            `;
+            if (reset) {
+                let errorMessage = '⚠️ Error loading products. Please try again later.';
+                if (error.message) {
+                    errorMessage = `⚠️ ${error.message}`;
+                }
+                
+                elements.productsContainer.innerHTML = `
+                    <div class="container-fluid">
+                        <div style="width: 100%; text-align: center; padding: 3em; color: #dc3545;">
+                            <div style="font-size: 3em; margin-bottom: 1em;">🚫</div>
+                            <h3 style="color: #dc3545; margin-bottom: 1em;">Loading Error</h3>
+                            <p style="margin-bottom: 1.5em;">${errorMessage}</p>
+                            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="location.reload()" style="background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 500;">Retry</button>
+                                <button onclick="console.log('Debug info:', { error: '${error.message}', timestamp: new Date().toISOString() })" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 500;">Debug Info</button>
+                            </div>
+                            <p style="margin-top: 1em; color: #6c757d; font-size: 0.9em;">Check the browser console for more details</p>
+                        </div>
+                    </div>
+                `;
+            }
+        } finally {
+            isLoading = false;
         }
     }
 
-    function renderProducts(products) {
+    const showSkeletonLoaders = () => {
+        const skeletonCount = Math.min(productsPerPage, 8); // Show max 8 skeletons initially
+        const skeletonHTML = Array(skeletonCount).fill(createSkeletonLoader()).join('');
+        
+        elements.productsContainer.innerHTML = `
+            <div class="container-fluid">
+                <div class="products-grid">
+                    ${skeletonHTML}
+                </div>
+            </div>
+        `;
+    };
+
+    const createLoadMoreObserver = () => {
+        if ('IntersectionObserver' in window) {
+            const loadMoreObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && hasMoreProducts && !isLoading) {
+                        console.log('Loading more products...');
+                        loadProducts(false);
+                    }
+                });
+            }, {
+                rootMargin: '100px 0px',
+                threshold: 0.1
+            });
+
+            return loadMoreObserver;
+        }
+        return null;
+    };
+
+    async function renderProducts(products, reset = true) {
         if (!elements.productsContainer) return;
 
         if (!products || products.length === 0) {
             elements.productsContainer.innerHTML = `
                 <div class="container-fluid">
-                    <div style="width: 100%; text-align: center; padding: 2em;">No products available at the moment.</div>
+                    <div style="width: 100%; text-align: center; padding: 3em;">
+                        <div style="font-size: 3em; margin-bottom: 1em;">🛍️</div>
+                        <h3 style="color: #666; margin-bottom: 0.5em;">No products available</h3>
+                        <p style="color: #999;">Check back soon for new arrivals!</p>
+                    </div>
                 </div>
             `;
             return;
@@ -468,45 +740,135 @@ document.addEventListener('DOMContentLoaded', () => {
             const sortedImages = product.product_images?.slice().sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
             const primaryImage = sortedImages[0]?.image_url || '';
             
-            // Get all image URLs for the modal gallery, but store the full objects for the cart
-            const allImageUrls = sortedImages.map(img => img.image_url);
+            // Create placeholder image (1x1 transparent pixel)
+            const placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4=';
 
             return `
-                <div class="single_gallery_item">
+                <div class="single_gallery_item" data-product-id="${product.id}">
                     <a class="gallery-img" 
                        data-img="${primaryImage}" 
                        data-title="${product.name}" 
                        data-id="${product.id}" 
                        data-description="${product.description || ''}"
                        data-images='${JSON.stringify(sortedImages)}'>
-                        <img src="${primaryImage}" alt="${product.name}" loading="lazy">
+                        <div class="image-container">
+                            <img src="${placeholder}" 
+                                 data-src="${primaryImage}" 
+                                 alt="${product.name}" 
+                                 class="lazy-loading product-image"
+                                 style="transition: opacity 0.3s ease; height: 400px; width: 400px;">
+                            <div class="image-overlay">
+                                <span class="view-details">👁️ View Details</span>
+                            </div>
+                        </div>
                     </a>
                     <div class="gallery-content">
-                        <h4>${product.name}</h4>
+                        <h4 title="${product.name}">${product.name}</h4>
+                        <p class="product-description">${(product.description || '').substring(0, 80)}${(product.description || '').length > 80 ? '...' : ''}</p>
                         <button class="add-to-cart-btn" 
                                 data-img="${primaryImage}" 
                                 data-title="${product.name}" 
                                 data-id="${product.id}" 
                                 data-description="${product.description || ''}"
                                 data-images='${JSON.stringify(sortedImages)}'>
-                            Add to Cart
+                            🛒 Add to Cart
                         </button>
                     </div>
                 </div>
             `;
         }).join('');
 
-        elements.productsContainer.innerHTML = `
-            <div class="container-fluid">
-                <div class="products">${productsHtml}</div>
-            </div>
-        `;
+        if (reset) {
+            elements.productsContainer.innerHTML = `
+                <div class="container-fluid">
+                    <div class="products-grid">${productsHtml}</div>
+                    ${hasMoreProducts ? '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>' : ''}
+                </div>
+            `;
+        } else {
+            // Append new products to existing grid
+            const productsGrid = elements.productsContainer.querySelector('.products-grid');
+            if (productsGrid) {
+                productsGrid.insertAdjacentHTML('beforeend', productsHtml);
+                
+                // Update load more trigger
+                const existingTrigger = document.getElementById('load-more-trigger');
+                if (existingTrigger) {
+                    existingTrigger.remove();
+                }
+                
+                if (hasMoreProducts) {
+                    productsGrid.insertAdjacentHTML('afterend', '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>');
+                }
+            }
+        }
 
-        // Ensure proper layout after rendering
-        document.documentElement.style.scrollBehavior = 'auto';
-        window.scrollTo(0, 0);
-        document.documentElement.style.scrollBehavior = 'smooth';
+        // Initialize lazy loading for new images
+        await initializeLazyLoading();
+
+        // Set up load more observer if there are more products
+        if (hasMoreProducts) {
+            setupLoadMoreObserver();
+        }
+
+        // Only scroll to top on initial load
+        if (reset) {
+            document.documentElement.style.scrollBehavior = 'auto';
+            window.scrollTo(0, 0);
+            document.documentElement.style.scrollBehavior = 'smooth';
+        }
     }
+
+    const initializeLazyLoading = async () => {
+        // Initialize image observer if not already created
+        if (!imageObserver) {
+            imageObserver = createImageObserver();
+        }
+
+        // Observe all lazy loading images
+        const lazyImages = document.querySelectorAll('img.lazy-loading');
+        lazyImages.forEach(img => {
+            observeImage(img);
+        });
+
+        // Preload images on hover for faster modal opening
+        const productItems = document.querySelectorAll('.single_gallery_item');
+        productItems.forEach(item => {
+            let isPreloaded = false;
+            
+            const preloadImage = () => {
+                if (isPreloaded) return;
+                isPreloaded = true;
+                
+                const galleryImg = item.querySelector('.gallery-img');
+                if (galleryImg) {
+                    const imgSrc = galleryImg.dataset.img;
+                    if (imgSrc) {
+                        const preloader = new Image();
+                        preloader.src = imgSrc;
+                    }
+                }
+            };
+
+            // Preload on hover with a small delay to avoid unnecessary loads
+            item.addEventListener('mouseenter', () => {
+                setTimeout(preloadImage, 200);
+            });
+
+            // Also preload on focus for keyboard navigation
+            item.addEventListener('focus', preloadImage, { once: true });
+        });
+    };
+
+    const setupLoadMoreObserver = () => {
+        const loadMoreTrigger = document.getElementById('load-more-trigger');
+        if (loadMoreTrigger) {
+            const loadMoreObserver = createLoadMoreObserver();
+            if (loadMoreObserver) {
+                loadMoreObserver.observe(loadMoreTrigger);
+            }
+        }
+    };
 
     // Add resize event listener to handle layout changes
     window.addEventListener('resize', () => {
@@ -572,17 +934,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Modal Controls
         elements.productModal.querySelector('.modal-close').addEventListener('click', closeModal);
-        elements.productModal.addEventListener('click', (e) => { if (e.target === elements.productModal) closeModal(); });
+        elements.productModal.addEventListener('click', (e) => { 
+            if (e.target === elements.productModal || e.target.classList.contains('fast-modal-backdrop')) {
+                closeModal(); 
+            }
+        });
 
-        // Quantity Controls
-        const qtyButtons = elements.productModal.querySelectorAll('.modal-qty-btn');
+        // Quantity Controls (updated for fast modal)
+        const qtyButtons = elements.productModal.querySelectorAll('.fast-qty-btn, .modal-qty-btn');
         qtyButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const input = elements.modalQtyInput;
                 const currentValue = parseInt(input.value, 10) || 1;
-                if (button.textContent === '+') {
+                if (button.classList.contains('fast-qty-plus') || button.textContent === '+' || button.textContent === '➕') {
                     input.value = currentValue + 1;
-                } else if (button.textContent === '-' && currentValue > 1) {
+                } else if ((button.classList.contains('fast-qty-minus') || button.textContent === '-' || button.textContent === '➖' || button.textContent === '−') && currentValue > 1) {
                     input.value = currentValue - 1;
                 }
             });
@@ -827,6 +1193,10 @@ document.querySelectorAll('#colorSwatchContainer2 .color-swatch').forEach(swatch
     }
 
     // --- INITIALIZATION ---
+    // Create image observer for lazy loading
+    imageObserver = createImageObserver();
+    
+    // Load products with lazy loading
     loadProducts();
     loadCart();
     initEventListeners();
