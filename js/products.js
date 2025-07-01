@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Modal Content
         modalImg: document.querySelector('.modal-product-img'),
         modalTitle: document.querySelector('.modal-product-title'),
+        modalPrice: document.querySelector('.modal-product-price'),
         modalQtyInput: document.getElementById('modal-qty'),
         // Modal Color Dropdown
         modalColorGroup: document.getElementById('modal-color-group'),
@@ -30,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBuyNowModal: document.getElementById('closeBuyNowModal'),
         buyNowSubmitBtn: document.getElementById('buyNowSubmitBtn'),
         buyNowLoader: document.getElementById('buyNowLoader'),
+        // Order Summary
+        orderSummary: document.getElementById('orderSummary'),
+        orderItems: document.getElementById('orderItems'),
+        orderTotal: document.getElementById('orderTotal'),
         // 3D Models
         modelViewer1: document.getElementById("modelViewer1"),
         modelViewer2: document.getElementById("modelViewer2"),
@@ -151,6 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!elements.cartItemsDiv || !elements.cartCount || !elements.cartBuyNowBtn) return;
         
         const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+        const totalPrice = cart.reduce((sum, i) => sum + (parseFloat(i.price || 0) * i.qty), 0);
+        
         elements.cartCount.textContent = totalQty;
         elements.cartCount.style.display = totalQty > 0 ? 'block' : 'none';
 
@@ -158,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.cartItemsDiv.innerHTML = '<div id="cartEmptyMsg">Your cart is empty.</div>';
             elements.cartBuyNowBtn.disabled = true;
         } else {
-            elements.cartItemsDiv.innerHTML = cart.map((item, idx) => {
+            const cartItemsHTML = cart.map((item, idx) => {
                 // Debug logging
                 console.log('Cart item:', item);
                 console.log('Cart item product_images:', item.product_images);
@@ -183,13 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 console.log('Primary image URL:', primaryImage);
                 
+                const itemPrice = parseFloat(item.price || 0);
+                const itemTotal = itemPrice * item.qty;
+                
                 return `
                 <div class="cart-item" data-idx="${idx}">
                    <img src="${primaryImage}" alt="${item.title}" loading="lazy">
                     <div class="cart-item-details">
                         <div class="cart-item-title">${item.title}</div>
+                        <div class="cart-item-price">Rs. ${itemPrice.toFixed(2)} each</div>
                         <div class="cart-item-meta">
                             <span>Qty: ${item.qty}</span>
+                            <span class="cart-item-total">Total: Rs. ${itemTotal.toFixed(2)}</span>
                             ${item.color ? `
                             <span class="cart-item-color">
                                 <span class="cart-item-color-swatch" style="background-color:${item.color};"></span>
@@ -201,6 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             }).join('');
+            
+            const cartTotalHTML = `
+                <div class="cart-total-section">
+                    <div class="cart-total-line">
+                        <span>Total Items: ${totalQty}</span>
+                        <span class="cart-grand-total">Grand Total: Rs. ${totalPrice.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+            
+            elements.cartItemsDiv.innerHTML = cartItemsHTML + cartTotalHTML;
             elements.cartBuyNowBtn.disabled = false;
         }
     };
@@ -211,12 +234,51 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCart();
     };
 
+    const updateOrderSummary = () => {
+        const orderItemsDiv = document.getElementById('orderItems');
+        const orderTotalDiv = document.getElementById('orderTotal');
+        
+        if (!orderItemsDiv || !orderTotalDiv) return;
+        
+        const totalPrice = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.qty), 0);
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        
+        orderItemsDiv.innerHTML = cart.map(item => {
+            const itemPrice = parseFloat(item.price || 0);
+            const itemTotal = itemPrice * item.qty;
+            
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:8px 0;border-bottom:1px solid #e9ecef;">
+                    <div>
+                        <div style="font-weight:500;color:#333;">${item.title}</div>
+                        <div style="font-size:0.9em;color:#666;">
+                            Rs. ${itemPrice.toFixed(2)} × ${item.qty}
+                            ${item.color ? ` (${item.color})` : ''}
+                        </div>
+                    </div>
+                    <div style="font-weight:600;color:#333;">Rs. ${itemTotal.toFixed(2)}</div>
+                </div>
+            `;
+        }).join('');
+        
+        orderTotalDiv.textContent = `Rs. ${totalPrice.toFixed(2)}`;
+    };
+
     // --- MODAL LOGIC ---
     const openModal = (imgSrc, title, productId, allImages = []) => {
         if (!elements.productModal) return;
 
         const productElement = document.querySelector(`[data-id="${productId}"]`);
         const description = productElement ? productElement.dataset.description : '';
+        let price = productElement ? productElement.dataset.price : '0';
+
+        // Fallback: try to get price from allProducts array if not in dataset
+        if ((!price || price === '0') && allProducts.length > 0) {
+            const product = allProducts.find(p => p.id === parseInt(productId));
+            if (product && product.price) {
+                price = product.price;
+            }
+        }
 
         elements.productModal.dataset.productId = productId;
         elements.modalTitle.textContent = title;
@@ -226,6 +288,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const descriptionElement = elements.productModal.querySelector('.modal-product-description');
         if (descriptionElement) {
             descriptionElement.textContent = description || 'No description available.';
+        }
+        
+        // Add price to modal
+        const priceElement = elements.productModal.querySelector('.modal-product-price');
+        if (priceElement) {
+            const displayPrice = parseFloat(price || 0).toFixed(2);
+            priceElement.textContent = `Rs. ${displayPrice}`;
+            priceElement.dataset.price = price; // Store price for easy access
         }
         
         // Handle multiple images - create gallery
@@ -749,6 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                        data-img="${primaryImage}" 
                        data-title="${product.name}" 
                        data-id="${product.id}" 
+                       data-price="${product.price || '0'}"
                        data-description="${product.description || ''}"
                        data-images='${JSON.stringify(sortedImages)}'>
                         <div class="image-container">
@@ -764,11 +835,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
                     <div class="gallery-content">
                         <h4 title="${product.name}">${product.name}</h4>
+                        <p class="product-price">${product.price ? `Rs.${parseFloat(product.price).toFixed(2)}` : 'Price not available'}</p>
                         <p class="product-description">${(product.description || '').substring(0, 80)}${(product.description || '').length > 80 ? '...' : ''}</p>
                         <button class="add-to-cart-btn" 
                                 data-img="${primaryImage}" 
                                 data-title="${product.name}" 
                                 data-id="${product.id}" 
+                                data-price="${product.price || '0'}"
                                 data-description="${product.description || ''}"
                                 data-images='${JSON.stringify(sortedImages)}'>
                             🛒 Add to Cart
@@ -928,6 +1001,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 console.log('Opening modal with images:', imageUrls);
+                
+                // Handle case where click is on cart button directly (quick add to cart)
+                if (cartBtn && !galleryImg) {
+                    const price = el.dataset.price || '0';
+                    const productImages = el.dataset.images ? JSON.parse(el.dataset.images) : [];
+                    
+                    const cartItem = {
+                        id: el.dataset.id,
+                        title: el.dataset.title,
+                        qty: 1,
+                        color: '',
+                        price: price,
+                        product_images: productImages
+                    };
+                    
+                    addToCart(cartItem);
+                    return;
+                }
+                
                 openModal(el.dataset.img, el.dataset.title, el.dataset.id, imageUrls);
             }
         });
@@ -965,11 +1057,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const productImages = productElement?.dataset.images ? JSON.parse(productElement.dataset.images) : [];
             console.log('Adding to cart - Parsed Product Images:', productImages);
             
+            // Get price from the product element or modal
+            let price = productElement?.dataset.price || '0';
+            const priceElement = elements.productModal.querySelector('.modal-product-price');
+            if ((!price || price === '0') && priceElement?.dataset.price) {
+                price = priceElement.dataset.price;
+            }
+            
             const cartItem = {
                 id: productId,
                 title: elements.modalTitle.textContent,
                 qty: parseInt(elements.modalQtyInput.value, 10) || 1,
                 color: getModalColor(),
+                price: price,
                 product_images: productImages
             };
             
@@ -984,17 +1084,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const productImages = productElement?.dataset.images ? JSON.parse(productElement.dataset.images) : [];
             
+            // Get price from the product element or modal
+            let price = productElement?.dataset.price || '0';
+            const priceElement = elements.productModal.querySelector('.modal-product-price');
+            if ((!price || price === '0') && priceElement?.dataset.price) {
+                price = priceElement.dataset.price;
+            }
+            
             const cartItem = {
                 id: productId,
                 title: elements.modalTitle.textContent,
                 qty: parseInt(elements.modalQtyInput.value, 10) || 1,
                 color: getModalColor(),
+                price: price,
                 product_images: productImages
             };
             
             addToCart(cartItem);
             closeModal();
             showCartModal();
+            updateOrderSummary();
             elements.buyNowModal.style.display = 'flex';
         });
 
@@ -1052,6 +1161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         elements.cartBuyNowBtn.addEventListener('click', () => {
             if (cart.length > 0) {
+                updateOrderSummary();
                 elements.buyNowModal.style.display = 'flex';
             }
         });

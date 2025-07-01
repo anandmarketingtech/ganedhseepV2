@@ -616,6 +616,12 @@ function displayProducts(products) {
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             ">${product.description}</p>
+            <p style="
+                color: #666; 
+                margin-bottom: 15px; 
+                line-height: 1.5; 
+                font-size: 0.95rem;
+            ">Rs. ${product.price}</p>
             <div class="product-meta" style="
                 display: flex; 
                 justify-content: space-between; 
