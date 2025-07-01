@@ -290,7 +290,8 @@ window.saveProduct = async function() {
             name: document.getElementById('name').value,
             description: document.getElementById('description').value,
             category: document.getElementById('category').value,
-            status: document.getElementById('status').value
+            status: document.getElementById('status').value,
+            price: parseFloat(document.getElementById('price').value) || 0
         };
         
         let savedProduct;
@@ -777,6 +778,7 @@ window.editProduct = async function(productId) {
         document.getElementById('description').value = product.description;
         document.getElementById('category').value = product.category;
         document.getElementById('status').value = product.status;
+        document.getElementById('price').value = product.price !== undefined ? product.price : '';
         
         // Set images
         managedImageFiles = (product.product_images || [])
