@@ -86,6 +86,18 @@
 </head>
 
 <body>
+    <!-- Currency Selector -->
+    <div style="position:fixed;top:90px;right:90px;z-index:10001;">
+        <select id="currencySelector"
+            style="background:#23232b;color:#fff;border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:0.9em;cursor:pointer;min-width:80px;">
+            <option value="NPR">NPR</option>
+            <option value="USD">USD</option>
+            <option value="AUD">AUD</option>
+            <option value="GBP">GBP</option>
+            <option value="AED">AED</option>
+        </select>
+    </div>
+
     <!-- Place Cart Button below header, not overlapping hamburger -->
     <div style="position:fixed;top:90px;right:24px;z-index:10001;">
         <button id="cartBtn"
@@ -1451,6 +1463,27 @@
             @media (max-width: 480px) {
                 #cartModal {
                     width: 100vw;
+                }
+            }
+
+            /* Currency selector responsive styles */
+            @media (max-width: 768px) {
+                #currencySelector {
+                    top: 140px !important;
+                    right: 20px !important;
+                    font-size: 0.8em !important;
+                    padding: 6px 10px !important;
+                    min-width: 70px !important;
+                }
+            }
+
+            @media (max-width: 480px) {
+                #currencySelector {
+                    top: 130px !important;
+                    right: 16px !important;
+                    font-size: 0.75em !important;
+                    padding: 5px 8px !important;
+                    min-width: 60px !important;
                 }
             }
         </style>

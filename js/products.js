@@ -48,6 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLoading = false;
     let hasMoreProducts = true;
     let imageObserver = null;
+    
+    // Currency state
+    let currentCurrency = localStorage.getItem('selectedCurrency') || 'NPR';
+    let exchangeRates = { NPR: 1 }; // Base currency
+    let isUpdatingRates = false;
 
     // --- LAZY LOADING UTILITIES ---
     const createImageObserver = () => {
@@ -116,6 +121,161 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cartKey = (id, color) => `${id}|${(color || '')}`;
 
+    // --- CURRENCY CONVERSION FUNCTIONS ---
+    
+    // Fetch exchange rates from API and cache in database
+    async function fetchExchangeRates() {
+        if (isUpdatingRates) return;
+        isUpdatingRates = true;
+        
+        try {
+            const response = await fetch('https://v6.exchangerate-api.com/v6/7397ee4c761a45e0a6344edb/latest/NPR');
+            const data = await response.json();
+            
+            if (data.result === 'success') {
+                const targetCurrencies = ['USD', 'AUD', 'GBP', 'AED'];
+                const ratesToSave = [];
+                
+                // Extract rates for our target currencies
+                targetCurrencies.forEach(currency => {
+                    if (data.conversion_rates[currency]) {
+                        exchangeRates[currency] = data.conversion_rates[currency];
+                        ratesToSave.push({
+                            target_currency: currency,
+                            rate: data.conversion_rates[currency]
+                        });
+                    }
+                });
+                
+                // Save to database
+                if (ratesToSave.length > 0) {
+                    const { error } = await supabase
+                        .from('exchange_rates')
+                        .upsert(ratesToSave, { onConflict: 'target_currency' });
+                    
+                    if (error) {
+                        console.warn('Failed to save exchange rates to database:', error);
+                    } else {
+                        console.log('Exchange rates updated successfully');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching exchange rates:', error);
+        } finally {
+            isUpdatingRates = false;
+        }
+    }
+    
+    // Get exchange rate for a target currency (with caching)
+    async function getExchangeRate(targetCurrency) {
+        if (targetCurrency === 'NPR') return 1;
+        
+        // Check if we have a cached rate
+        if (exchangeRates[targetCurrency]) {
+            return exchangeRates[targetCurrency];
+        }
+        
+        try {
+            // Try to get from database first
+            const { data, error } = await supabase
+                .from('exchange_rates')
+                .select('*')
+                .eq('target_currency', targetCurrency)
+                .single();
+
+            const isFresh = data && new Date(data.updated_at).getTime() > Date.now() - 12 * 60 * 60 * 1000; // 12 hours
+
+            if (isFresh) {
+                exchangeRates[targetCurrency] = data.rate;
+                return data.rate;
+            }
+            
+            // If not fresh or doesn't exist, fetch from API
+            await fetchExchangeRates();
+            return exchangeRates[targetCurrency] || 1;
+            
+        } catch (error) {
+            console.error('Error getting exchange rate:', error);
+            return 1; // Fallback to 1:1 conversion
+        }
+    }
+    
+    // Convert price from NPR to target currency
+    function convertPrice(nprPrice, rate) {
+        return (parseFloat(nprPrice) * rate).toFixed(2);
+    }
+    
+    // Format currency display with symbol
+    function formatCurrency(amount, currency) {
+        const symbols = {
+            NPR: 'Rs. ',
+            USD: '$',
+            AUD: 'A$',
+            GBP: '£',
+            AED: 'د.إ '
+        };
+        
+        const symbol = symbols[currency] || currency + ' ';
+        return `${symbol}${parseFloat(amount).toFixed(2)}`;
+    }
+    
+    // Update all prices on the page
+    async function updateAllPrices() {
+        const rate = await getExchangeRate(currentCurrency);
+        
+        // Update product grid prices
+        document.querySelectorAll('.product-price').forEach(priceElement => {
+            const originalPrice = priceElement.dataset.originalPrice;
+            if (originalPrice) {
+                const convertedPrice = convertPrice(originalPrice, rate);
+                priceElement.textContent = formatCurrency(convertedPrice, currentCurrency);
+            }
+        });
+        
+        // Update modal price
+        const modalPrice = document.querySelector('.modal-product-price');
+        if (modalPrice && modalPrice.dataset.price) {
+            const convertedPrice = convertPrice(modalPrice.dataset.price, rate);
+            modalPrice.textContent = formatCurrency(convertedPrice, currentCurrency);
+        }
+        
+        // Update cart prices
+        updateCartUI();
+        
+        // Update order summary if visible
+        if (document.getElementById('buyNowModal').style.display === 'flex') {
+            updateOrderSummary();
+        }
+    }
+    
+    // Initialize currency system
+    async function initializeCurrency() {
+        // Set currency selector to saved value
+        const currencySelector = document.getElementById('currencySelector');
+        if (currencySelector) {
+            currencySelector.value = currentCurrency;
+        }
+        
+        // Load exchange rates from database
+        try {
+            const { data, error } = await supabase
+                .from('exchange_rates')
+                .select('*');
+            
+            if (data && data.length > 0) {
+                data.forEach(rate => {
+                    exchangeRates[rate.target_currency] = rate.rate;
+                });
+            }
+        } catch (error) {
+            console.warn('Could not load exchange rates from database:', error);
+        }
+        
+        // Fetch fresh rates if we don't have them or they're old
+        await fetchExchangeRates();
+    }
+
     // --- CART LOGIC ---
     const loadCart = () => {
         try {
@@ -152,11 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCart();
     };
 
-    const updateCartUI = () => {
+    const updateCartUI = async () => {
         if (!elements.cartItemsDiv || !elements.cartCount || !elements.cartBuyNowBtn) return;
         
         const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
         const totalPrice = cart.reduce((sum, i) => sum + (parseFloat(i.price || 0) * i.qty), 0);
+        
+        // Get current exchange rate
+        const rate = await getExchangeRate(currentCurrency);
         
         elements.cartCount.textContent = totalQty;
         elements.cartCount.style.display = totalQty > 0 ? 'block' : 'none';
@@ -191,17 +354,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Primary image URL:', primaryImage);
                 
                 const itemPrice = parseFloat(item.price || 0);
-                const itemTotal = itemPrice * item.qty;
+                const convertedItemPrice = convertPrice(itemPrice, rate);
+                const itemTotal = parseFloat(convertedItemPrice) * item.qty;
                 
                 return `
                 <div class="cart-item" data-idx="${idx}">
                    <img src="${primaryImage}" alt="${item.title}" loading="lazy">
                     <div class="cart-item-details">
                         <div class="cart-item-title">${item.title}</div>
-                        <div class="cart-item-price">Rs. ${itemPrice.toFixed(2)} each</div>
+                        <div class="cart-item-price">${formatCurrency(convertedItemPrice, currentCurrency)} each</div>
                         <div class="cart-item-meta">
                             <span>Qty: ${item.qty}</span>
-                            <span class="cart-item-total">Total: Rs. ${itemTotal.toFixed(2)}</span>
+                            <span class="cart-item-total">Total: ${formatCurrency(itemTotal, currentCurrency)}</span>
                             ${item.color ? `
                             <span class="cart-item-color">
                                 <span class="cart-item-color-swatch" style="background-color:${item.color};"></span>
@@ -214,11 +378,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             }).join('');
             
+            const convertedTotalPrice = convertPrice(totalPrice, rate);
             const cartTotalHTML = `
                 <div class="cart-total-section">
                     <div class="cart-total-line">
                         <span>Total Items: ${totalQty}</span>
-                        <span class="cart-grand-total">Grand Total: Rs. ${totalPrice.toFixed(2)}</span>
+                        <span class="cart-grand-total">Grand Total: ${formatCurrency(convertedTotalPrice, currentCurrency)}</span>
                     </div>
                 </div>
             `;
@@ -234,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveCart();
     };
 
-    const updateOrderSummary = () => {
+    const updateOrderSummary = async () => {
         const orderItemsDiv = document.getElementById('orderItems');
         const orderTotalDiv = document.getElementById('orderTotal');
         
@@ -243,25 +408,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPrice = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.qty), 0);
         const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
         
+        // Get current exchange rate
+        const rate = await getExchangeRate(currentCurrency);
+        
         orderItemsDiv.innerHTML = cart.map(item => {
             const itemPrice = parseFloat(item.price || 0);
-            const itemTotal = itemPrice * item.qty;
+            const convertedItemPrice = convertPrice(itemPrice, rate);
+            const itemTotal = parseFloat(convertedItemPrice) * item.qty;
             
             return `
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:8px 0;border-bottom:1px solid #e9ecef;">
                     <div>
                         <div style="font-weight:500;color:#333;">${item.title}</div>
                         <div style="font-size:0.9em;color:#666;">
-                            Rs. ${itemPrice.toFixed(2)} × ${item.qty}
+                            ${formatCurrency(convertedItemPrice, currentCurrency)} × ${item.qty}
                             ${item.color ? ` (${item.color})` : ''}
                         </div>
                     </div>
-                    <div style="font-weight:600;color:#333;">Rs. ${itemTotal.toFixed(2)}</div>
+                    <div style="font-weight:600;color:#333;">${formatCurrency(itemTotal, currentCurrency)}</div>
                 </div>
             `;
         }).join('');
         
-        orderTotalDiv.textContent = `Rs. ${totalPrice.toFixed(2)}`;
+        const convertedTotalPrice = convertPrice(totalPrice, rate);
+        orderTotalDiv.textContent = formatCurrency(convertedTotalPrice, currentCurrency);
     };
 
     // --- MODAL LOGIC ---
@@ -293,9 +463,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add price to modal
         const priceElement = elements.productModal.querySelector('.modal-product-price');
         if (priceElement) {
-            const displayPrice = parseFloat(price || 0).toFixed(2);
-            priceElement.textContent = `Rs. ${displayPrice}`;
-            priceElement.dataset.price = price; // Store price for easy access
+            const rate = exchangeRates[currentCurrency] || 1;
+            const convertedPrice = convertPrice(price || 0, rate);
+            priceElement.textContent = formatCurrency(convertedPrice, currentCurrency);
+            priceElement.dataset.price = price; // Store original NPR price for easy access
         }
         
         // Handle multiple images - create gallery
@@ -805,6 +976,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Get current exchange rate once for all products
+        const rate = await getExchangeRate(currentCurrency);
+
         const productsHtml = products.map(product => {
             // Get the first image (primary image) for the product
             const sortedImages = product.product_images?.slice().sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
@@ -835,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
                     <div class="gallery-content">
                         <h4 title="${product.name}">${product.name}</h4>
-                        <p class="product-price">${product.price ? `Rs.${parseFloat(product.price).toFixed(2)}` : 'Price not available'}</p>
+                        <p class="product-price" data-original-price="${product.price || 0}">${product.price ? formatCurrency(convertPrice(product.price, rate), currentCurrency) : 'Price not available'}</p>
                         <p class="product-description">${(product.description || '').substring(0, 80)}${(product.description || '').length > 80 ? '...' : ''}</p>
                         <button class="add-to-cart-btn" 
                                 data-img="${primaryImage}" 
@@ -1266,6 +1440,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Currency Selector
+        const currencySelector = document.getElementById('currencySelector');
+        if (currencySelector) {
+            currencySelector.addEventListener('change', async (e) => {
+                currentCurrency = e.target.value;
+                localStorage.setItem('selectedCurrency', currentCurrency);
+                
+                // Update all prices on the page
+                await updateAllPrices();
+            });
+        }
+
         // Global Listeners
         document.addEventListener('click', () => {
             if (elements.modalColorDropdownList.style.display === 'block') {
@@ -1305,6 +1491,9 @@ document.querySelectorAll('#colorSwatchContainer2 .color-swatch').forEach(swatch
     // --- INITIALIZATION ---
     // Create image observer for lazy loading
     imageObserver = createImageObserver();
+    
+    // Initialize currency system
+    initializeCurrency();
     
     // Load products with lazy loading
     loadProducts();
