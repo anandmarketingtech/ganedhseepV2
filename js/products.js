@@ -979,14 +979,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get current exchange rate once for all products
         const rate = await getExchangeRate(currentCurrency);
 
-        const productsHtml = products.map(product => {
-            // Get the first image (primary image) for the product
+        // Preload first 24 images eagerly, rest lazy
+        const productsHtml = products.map((product, idx) => {
             const sortedImages = product.product_images?.slice().sort((a, b) => (a.order || 0) - (b.order || 0)) || [];
             const primaryImage = sortedImages[0]?.image_url || '';
-            
-            // Create placeholder image (1x1 transparent pixel)
             const placeholder = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmNWY1ZjUiLz48L3N2Zz4=';
-
+            // Use eager loading for first 24, lazy for rest
+            const loadingAttr = idx < 24 ? 'eager' : 'lazy';
             return `
                 <div class="single_gallery_item" data-product-id="${product.id}">
                     <a class="gallery-img" 
@@ -997,10 +996,12 @@ document.addEventListener('DOMContentLoaded', () => {
                        data-description="${product.description || ''}"
                        data-images='${JSON.stringify(sortedImages)}'>
                         <div class="image-container">
-                            <img src="${placeholder}" 
-                                 data-src="${primaryImage}" 
-                                 alt="${product.name}" 
-                                 class="lazy-loading product-image"
+                            <img src="${placeholder}"
+                                 data-src="${primaryImage}"
+                                 alt="${product.name}"
+                                 class="lazy-loading product-image fade-in"
+                                 loading="${loadingAttr}"
+                                 decoding="async"
                                  style="transition: opacity 0.3s ease; height: 400px; width: 400px;">
                             <div class="image-overlay">
                                 <span class="view-details">👁️ View Details</span>
@@ -1010,7 +1011,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="gallery-content">
                         <h4 title="${product.name}">${product.name}</h4>
                         <p class="product-price" data-original-price="${product.price || 0}">${product.price ? formatCurrency(convertPrice(product.price, rate), currentCurrency) : 'Price not available'}</p>
-                        <p class="product-description">${(product.description || '').substring(0, 80)}${(product.description || '').length > 80 ? '...' : ''}</p>
+                        <p class="product-description">
+                            ${(product.description || '').substring(0, 80)}${(product.description || '').length > 80 ? '...' : ''}
+                        </p>
                         <button class="add-to-cart-btn" 
                                 data-img="${primaryImage}" 
                                 data-title="${product.name}" 
@@ -1025,33 +1028,55 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
-        if (reset) {
-            elements.productsContainer.innerHTML = `
-                <div class="container-fluid">
-                    <div class="products-grid">${productsHtml}</div>
-                    ${hasMoreProducts ? '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>' : ''}
-                </div>
-            `;
-        } else {
-            // Append new products to existing grid
-            const productsGrid = elements.productsContainer.querySelector('.products-grid');
+        // --- DOM diffing for seamless image experience ---
+        let productsGrid = elements.productsContainer.querySelector('.products-grid');
+        if (reset || !productsGrid) {
+            // On reset, clear grid but do not recreate the grid element if it exists
             if (productsGrid) {
-                productsGrid.insertAdjacentHTML('beforeend', productsHtml);
-                
-                // Update load more trigger
-                const existingTrigger = document.getElementById('load-more-trigger');
-                if (existingTrigger) {
-                    existingTrigger.remove();
-                }
-                
-                if (hasMoreProducts) {
-                    productsGrid.insertAdjacentHTML('afterend', '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>');
-                }
+                productsGrid.innerHTML = productsHtml;
+            } else {
+                elements.productsContainer.innerHTML = `
+                    <div class="container-fluid">
+                        <div class="products-grid">${productsHtml}</div>
+                        ${hasMoreProducts ? '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>' : ''}
+                    </div>
+                `;
+            }
+        } else {
+            // Infinite scroll: only append new cards, do not replace grid
+            productsGrid.insertAdjacentHTML('beforeend', productsHtml);
+            // Update load more trigger
+            const existingTrigger = document.getElementById('load-more-trigger');
+            if (existingTrigger) {
+                existingTrigger.remove();
+            }
+            if (hasMoreProducts) {
+                productsGrid.insertAdjacentHTML('afterend', '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>');
             }
         }
 
         // Initialize lazy loading for new images
         await initializeLazyLoading();
+
+        // Lookahead preloading: preload next 6 images after visible area
+        setTimeout(() => {
+            const lazyImgs = Array.from(document.querySelectorAll('img.lazy-loading'));
+            const preloadCount = 6;
+            let lastVisibleIdx = -1;
+            lazyImgs.forEach((img, idx) => {
+                const rect = img.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    lastVisibleIdx = idx;
+                }
+            });
+            for (let i = lastVisibleIdx + 1; i <= lastVisibleIdx + preloadCount && i < lazyImgs.length; i++) {
+                const img = lazyImgs[i];
+                if (img && img.dataset.src && !img.src.includes(img.dataset.src)) {
+                    const preloader = new window.Image();
+                    preloader.src = img.dataset.src;
+                }
+            }
+        }, 300);
 
         // Set up load more observer if there are more products
         if (hasMoreProducts) {

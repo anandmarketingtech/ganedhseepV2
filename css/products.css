@@ -1,6 +1,6 @@
 /* Products Page CSS */
 
-/* Base structure fixes */
+/* --- Scroll Smoothness & Performance Optimizations --- */
 html, body {
     margin: 0;
     padding: 0;
@@ -8,11 +8,16 @@ html, body {
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto !important;
+    scroll-behavior: smooth; /* Enable smooth scrolling */
+    -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+    will-change: scroll-position;
+    backface-visibility: hidden;
 }
 
 /* Ensure body and main containers allow scrolling */
 body {
     overflow-y: auto !important;
+    scroll-behavior: smooth; /* Smoother scroll for body */
 }
 
 /* Improved Add to Cart button styling */
@@ -754,6 +759,7 @@ body.modal-open {
     position: relative;
     z-index: 1;
     min-height: 50vh;
+    scroll-behavior: smooth; /* Smoother scroll for product grid */
 }
 
 .sonar-portfolio {
@@ -765,6 +771,7 @@ body.modal-open {
     display: grid;
     grid-template-columns: 1fr;
     align-items: start;
+    scroll-behavior: smooth; /* Smoother scroll for portfolio */
 }
 
 .sonar-projects-area {
@@ -785,16 +792,26 @@ body.modal-open {
     background: #fff;
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s cubic-bezier(0.4,0,0.2,1);
     position: relative;
     display: flex;
     flex-direction: column;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 .single_gallery_item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.13);
+}
+
+.single_gallery_item:active {
+    box-shadow: none;
+}
+
+.products, .single_gallery_item {
+    transform: translateZ(0);
 }
 
 .gallery-img {
@@ -812,6 +829,9 @@ body.modal-open {
     object-fit: cover;
     transition: transform 0.3s ease;
     display: block;
+    image-rendering: auto;
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 300px;
 }
 
 .gallery-img:hover img {
@@ -1049,4 +1069,71 @@ body.modal-open {
         width: 45px;
         height: 45px;
     }
+}
+
+/* Custom scrollbar for modern look and smoother feel */
+.products, .sonar-portfolio, .sonar-projects-area, html, body {
+    scrollbar-width: thin;
+    scrollbar-color: #bdbdbd #f5f5f5;
+}
+
+.products::-webkit-scrollbar, .sonar-portfolio::-webkit-scrollbar, .sonar-projects-area::-webkit-scrollbar, html::-webkit-scrollbar, body::-webkit-scrollbar {
+    width: 10px;
+    background: #f5f5f5;
+}
+.products::-webkit-scrollbar-thumb, .sonar-portfolio::-webkit-scrollbar-thumb, .sonar-projects-area::-webkit-scrollbar-thumb, html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+    background: #bdbdbd;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.products::-webkit-scrollbar-thumb:hover, .sonar-portfolio::-webkit-scrollbar-thumb:hover, .sonar-projects-area::-webkit-scrollbar-thumb:hover, html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+/* --- Further Scroll Performance Optimizations --- */
+
+/* 1. Lighter box-shadow for cards, and remove shadow on scroll */
+.single_gallery_item {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s cubic-bezier(0.4,0,0.2,1);
+    /* ...existing code... */
+}
+.single_gallery_item:active {
+    box-shadow: none;
+}
+
+/* 2. Only promote layers where needed */
+.products, .single_gallery_item {
+    transform: translateZ(0);
+}
+
+/* 3. Optimize image rendering and visibility */
+.gallery-img img {
+    image-rendering: auto;
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 300px;
+    /* ...existing code... */
+}
+
+/* 4. Reduce transition/animation on scroll */
+.products, .sonar-portfolio, .sonar-projects-area {
+    transition: none !important;
+}
+
+/* 5. Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    html, body, .products, .single_gallery_item, .gallery-img img {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* Fade-in effect for product images */
+.product-image.fade-in {
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.product-image.fade-in.lazy-loaded {
+    opacity: 1;
 }
