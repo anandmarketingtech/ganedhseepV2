@@ -43,10 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
     let currentKeyboardHandler = null;
     let allProducts = []; // Store all products for pagination
-    let currentPage = 0;
-    let productsPerPage = 12; // Load products in batches
+    let productsPerPage = 0; // 0 means load all
     let isLoading = false;
-    let hasMoreProducts = true;
+    let hasMoreProducts = false;
     let imageObserver = null;
     
     // Currency state
@@ -792,88 +791,36 @@ document.addEventListener('DOMContentLoaded', () => {
         isLoading = true;
 
         if (reset) {
-            // Reset pagination state
-            currentPage = 0;
+            // Reset state
             allProducts = [];
-            hasMoreProducts = true;
-            
-            // Reset container styles
+            hasMoreProducts = false;
             elements.productsContainer.removeAttribute('style');
             elements.productsContainer.className = 'row sonar-portfolio';
-            
-            // Show skeleton loaders
             showSkeletonLoaders();
         }
 
         try {
-            // Calculate offset for pagination
-            const offset = currentPage * productsPerPage;
-            
-            // First, try the full query with product_images
+            // Fetch ALL products at once
             let products, error, count;
-            
             try {
                 const response = await supabase
                     .from('products')
-                    .select(`
-                        *,
-                        product_images (
-                            id,
-                            image_url,
-                            "order"
-                        )
-                    `, { count: 'exact' })
+                    .select(`*, product_images (id, image_url, "order")`, { count: 'exact' })
                     .order('order', { ascending: true })
-                    .order('order', { foreignTable: 'product_images', ascending: true })
-                    .range(offset, offset + productsPerPage - 1);
-                
+                    .order('order', { foreignTable: 'product_images', ascending: true });
                 products = response.data;
                 error = response.error;
                 count = response.count;
-                
-                console.log('Full query response:', { products, error, count });
             } catch (fullQueryError) {
-                console.warn('Full query failed, trying simple query:', fullQueryError);
-                
                 // Fallback: try simple query without product_images
                 const simpleResponse = await supabase
                     .from('products')
-                    .select('*', { count: 'exact' })
-                    .range(offset, offset + productsPerPage - 1);
-                
+                    .select('*', { count: 'exact' });
                 products = simpleResponse.data;
                 error = simpleResponse.error;
                 count = simpleResponse.count;
-                
-                console.log('Simple query response:', { products, error, count });
-                
-                // If we got products but no images, add empty product_images array
                 if (products && products.length > 0) {
-                    products = products.map(product => ({
-                        ...product,
-                        product_images: []
-                    }));
-                }
-            }
-
-            // Additional debugging: check if we have any products at all
-            if ((!products || products.length === 0) && offset === 0) {
-                console.log('No products found, checking database...');
-                try {
-                    const testResponse = await supabase
-                        .from('products')
-                        .select('id, name', { count: 'exact' })
-                        .limit(1);
-                    
-                    console.log('Test query result:', testResponse);
-                    
-                    if (testResponse.count === 0) {
-                        console.log('Database contains no products');
-                    } else {
-                        console.log(`Database contains ${testResponse.count} products total`);
-                    }
-                } catch (testError) {
-                    console.error('Test query failed:', testError);
+                    products = products.map(product => ({ ...product, product_images: [] }));
                 }
             }
 
@@ -882,24 +829,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw error;
             }
 
-            // Debug: Log the products data structure
-            console.log(`Loaded ${products?.length || 0} products (page ${currentPage + 1})`);
-            console.log('Final products data:', products);
-
-            if (reset) {
-                allProducts = products || [];
-            } else {
-                allProducts = [...allProducts, ...(products || [])];
-            }
-
-            // Check if there are more products to load
-            hasMoreProducts = (products?.length || 0) === productsPerPage && allProducts.length < (count || 0);
-
-            // Render products
-            await renderProducts(allProducts, reset);
-
-            currentPage++;
-
+            allProducts = products || [];
+            hasMoreProducts = false;
+            await renderProducts(allProducts, true);
         } catch (error) {
             console.error('Error loading products:', error);
             if (reset) {
@@ -941,28 +873,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    const createLoadMoreObserver = () => {
-        if ('IntersectionObserver' in window) {
-            const loadMoreObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && hasMoreProducts && !isLoading) {
-                        console.log('Loading more products...');
-                        loadProducts(false);
-                    }
-                });
-            }, {
-                rootMargin: '100px 0px',
-                threshold: 0.1
-            });
-
-            return loadMoreObserver;
-        }
-        return null;
-    };
-
     async function renderProducts(products, reset = true) {
         if (!elements.productsContainer) return;
-
         if (!products || products.length === 0) {
             elements.productsContainer.innerHTML = `
                 <div class="container-fluid">
@@ -1038,21 +950,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.productsContainer.innerHTML = `
                     <div class="container-fluid">
                         <div class="products-grid">${productsHtml}</div>
-                        ${hasMoreProducts ? '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>' : ''}
                     </div>
                 `;
             }
         } else {
             // Infinite scroll: only append new cards, do not replace grid
             productsGrid.insertAdjacentHTML('beforeend', productsHtml);
-            // Update load more trigger
-            const existingTrigger = document.getElementById('load-more-trigger');
-            if (existingTrigger) {
-                existingTrigger.remove();
-            }
-            if (hasMoreProducts) {
-                productsGrid.insertAdjacentHTML('afterend', '<div id="load-more-trigger" style="height: 1px; margin-top: 50px;"></div>');
-            }
         }
 
         // Initialize lazy loading for new images
@@ -1078,12 +981,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 300);
 
-        // Set up load more observer if there are more products
-        if (hasMoreProducts) {
-            setupLoadMoreObserver();
-        }
-
-        // Only scroll to top on initial load
+        // No load more observer
         if (reset) {
             document.documentElement.style.scrollBehavior = 'auto';
             window.scrollTo(0, 0);
@@ -1130,16 +1028,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Also preload on focus for keyboard navigation
             item.addEventListener('focus', preloadImage, { once: true });
         });
-    };
-
-    const setupLoadMoreObserver = () => {
-        const loadMoreTrigger = document.getElementById('load-more-trigger');
-        if (loadMoreTrigger) {
-            const loadMoreObserver = createLoadMoreObserver();
-            if (loadMoreObserver) {
-                loadMoreObserver.observe(loadMoreTrigger);
-            }
-        }
     };
 
     // Add resize event listener to handle layout changes
