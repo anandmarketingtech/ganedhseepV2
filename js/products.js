@@ -53,6 +53,129 @@ document.addEventListener('DOMContentLoaded', () => {
     let exchangeRates = { NPR: 1 }; // Base currency
     let isUpdatingRates = false;
 
+    // Color state
+    let allColors = []; // Store all available colors
+    let currentProductColors = []; // Store colors for current product
+
+    // --- COLOR FUNCTIONS ---
+    
+    // Fetch all colors from database
+    async function fetchAllColors() {
+        try {
+            const { data: colors, error } = await supabase
+                .from('colors')
+                .select('*')
+                .order('name');
+            
+            if (error) throw error;
+            
+            allColors = colors || [];
+            console.log('Fetched colors:', allColors);
+            return allColors;
+        } catch (error) {
+            console.error('Error fetching colors:', error);
+            return [];
+        }
+    }
+
+    // Fetch colors for a specific product
+    async function fetchProductColors(productId) {
+        try {
+            const { data: productColors, error } = await supabase
+                .from('product_colors')
+                .select(`
+                    id,
+                    is_multi_color,
+                    colors (
+                        id,
+                        name,
+                        hex_code
+                    )
+                `)
+                .eq('product_id', productId);
+            
+            if (error) throw error;
+            
+            return productColors || [];
+        } catch (error) {
+            console.error('Error fetching product colors:', error);
+            return [];
+        }
+    }
+
+    // Fetch images for a specific product and color
+    async function fetchProductImagesByColor(productId, productColorId = null) {
+        try {
+            let query = supabase
+                .from('product_images')
+                .select('*')
+                .eq('product_id', productId)
+                .order('order');
+            
+            if (productColorId) {
+                query = query.eq('product_color_id', productColorId);
+            } else {
+                // If no color specified, get images without color association
+                query = query.is('product_color_id', null);
+            }
+            
+            const { data: images, error } = await query;
+            
+            if (error) throw error;
+            
+            return images || [];
+        } catch (error) {
+            console.error('Error fetching product images by color:', error);
+            return [];
+        }
+    }
+
+    // Update 3D model colors from database
+    async function update3DModelColors() {
+        try {
+            await fetchAllColors();
+            const colorContainer = document.getElementById('colorSwatchContainer2');
+            
+            if (!colorContainer || allColors.length === 0) return;
+            
+            // Clear existing swatches
+            colorContainer.innerHTML = '';
+            
+            // Create swatches from database colors
+            allColors.forEach((color, index) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.setAttribute('data-color', color.hex_code || `rgb(128, 128, 128)`);
+                swatch.setAttribute('data-color-id', color.id);
+                swatch.setAttribute('data-color-name', color.name);
+                swatch.style.backgroundColor = color.hex_code || '#808080';
+                swatch.title = color.name;
+                
+                // Add click handler
+                swatch.addEventListener('click', function () {
+                    const colorValue = this.getAttribute('data-color');
+                    applyMaterialChanges(elements.modelViewer2, colorValue);
+                    document.querySelectorAll('#colorSwatchContainer2 .color-swatch.active').forEach(el => el.classList.remove('active'));
+                    this.classList.add('active');
+                });
+                
+                colorContainer.appendChild(swatch);
+            });
+            
+            // Set first color as active
+            const firstSwatch = colorContainer.querySelector('.color-swatch');
+            if (firstSwatch) {
+                firstSwatch.classList.add('active');
+                if (elements.modelViewer2 && elements.modelViewer2.model) {
+                    applyMaterialChanges(elements.modelViewer2, firstSwatch.getAttribute('data-color'));
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error updating 3D model colors:', error);
+        }
+    }
+
     // --- LAZY LOADING UTILITIES ---
     const createImageObserver = () => {
         if ('IntersectionObserver' in window) {
@@ -113,11 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     // --- UTILITY FUNCTIONS ---
-    const getColorsFromSwatch = (containerId) => {
-        const swatches = document.querySelectorAll(`#${containerId} .color-swatch`);
-        return Array.from(swatches).map(swatch => swatch.getAttribute('data-color'));
-    };
-
     const cartKey = (id, color) => `${id}|${(color || '')}`;
 
     // --- CURRENCY CONVERSION FUNCTIONS ---
@@ -434,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- MODAL LOGIC ---
-    const openModal = (imgSrc, title, productId, allImages = []) => {
+    const openModal = async (imgSrc, title, productId, allImages = []) => {
         if (!elements.productModal) return;
 
         const productElement = document.querySelector(`[data-id="${productId}"]`);
@@ -468,10 +586,8 @@ document.addEventListener('DOMContentLoaded', () => {
             priceElement.dataset.price = price; // Store original NPR price for easy access
         }
         
-        // Handle multiple images - create gallery
-        setupModalImageGallery(imgSrc, allImages);
-        
-        setupModalColors();
+        // Setup colors first, then handle images
+        await setupModalColors(productId);
         
         // Fast modal opening with smooth animation
         document.body.classList.add('modal-open');
@@ -721,35 +837,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 200);
     };
 
-    const setupModalColors = () => {
-        const colors = getColorsFromSwatch('colorSwatchContainer2');
+    const setupModalColors = async (productId) => {
         if (!elements.modalColorGroup || !elements.modalColorDropdownList || !elements.modalColorDropdownSelected) return;
 
-        if (colors.length > 0) {
-            elements.modalColorDropdownList.innerHTML = colors.map(color => `
-                <div class="shadcn-dropdown-option" data-color="${color}">
-                    <span class="shadcn-dropdown-swatch" style="background:${color};"></span>
-                    <span>${color}</span>
-                </div>
-            `).join('');
-            setModalColor(colors[0]);
-            elements.modalColorGroup.style.display = 'block';
-        } else {
+        try {
+            // Fetch colors for this product
+            currentProductColors = await fetchProductColors(productId);
+            
+            if (currentProductColors.length > 0) {
+                // Create dropdown options for product colors
+                elements.modalColorDropdownList.innerHTML = currentProductColors.map(productColor => {
+                    const color = productColor.colors;
+                    return `
+                        <div class="shadcn-dropdown-option" 
+                             data-color-id="${color.id}"
+                             data-product-color-id="${productColor.id}"
+                             data-color="${color.hex_code || '#808080'}"
+                             data-color-name="${color.name}">
+                            <span class="shadcn-dropdown-swatch" style="background:${color.hex_code || '#808080'};"></span>
+                            <span>${color.name}</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Set first color as default
+                const firstColor = currentProductColors[0].colors;
+                setModalColor(firstColor.hex_code || '#808080', firstColor.name, currentProductColors[0].id);
+                elements.modalColorGroup.style.display = 'block';
+                
+                // Load images for the default color
+                await updateModalImagesByColor(productId, currentProductColors[0].id);
+            } else {
+                elements.modalColorGroup.style.display = 'none';
+                // Load default images (without color association)
+                await updateModalImagesByColor(productId, null);
+            }
+        } catch (error) {
+            console.error('Error setting up modal colors:', error);
             elements.modalColorGroup.style.display = 'none';
         }
     };
     
-    const setModalColor = (color) => {
-        if (!elements.modalColorDropdownSelected || !elements.modalColorDropdownBtn || !elements.modalImg) return;
+    const setModalColor = (colorValue, colorName, productColorId) => {
+        if (!elements.modalColorDropdownSelected || !elements.modalColorDropdownBtn) return;
+        
         elements.modalColorDropdownSelected.innerHTML = `
-            <span class="shadcn-dropdown-swatch" style="background:${color};"></span>
-            <span>${color}</span>`;
-        elements.modalColorDropdownBtn.setAttribute('data-color', color);
-        elements.modalImg.style.backgroundColor = color;
+            <span class="shadcn-dropdown-swatch" style="background:${colorValue};"></span>
+            <span>${colorName}</span>`;
+        elements.modalColorDropdownBtn.setAttribute('data-color', colorValue);
+        elements.modalColorDropdownBtn.setAttribute('data-color-name', colorName);
+        elements.modalColorDropdownBtn.setAttribute('data-product-color-id', productColorId);
     };
 
-    const getModalColor = () => elements.modalColorDropdownBtn.getAttribute('data-color') || '';
-    
+    const getModalColor = () => {
+        const colorName = elements.modalColorDropdownBtn.getAttribute('data-color-name') || '';
+        const productColorId = elements.modalColorDropdownBtn.getAttribute('data-product-color-id') || '';
+        return { colorName, productColorId };
+    };
+
+    // Update modal images based on selected color
+    async function updateModalImagesByColor(productId, productColorId) {
+        try {
+            const images = await fetchProductImagesByColor(productId, productColorId);
+            
+            if (images.length > 0) {
+                const imageUrls = images.map(img => img.image_url);
+                const primaryImage = imageUrls[0];
+                
+                // Update the modal image gallery
+                setupModalImageGallery(primaryImage, imageUrls);
+            } else {
+                // Fallback to default product images if no color-specific images
+                const defaultImages = await fetchProductImagesByColor(productId, null);
+                if (defaultImages.length > 0) {
+                    const imageUrls = defaultImages.map(img => img.image_url);
+                    const primaryImage = imageUrls[0];
+                    setupModalImageGallery(primaryImage, imageUrls);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating modal images by color:', error);
+        }
+    }
+
     // --- EMAIL FUNCTIONS ---
     const sendOrderConfirmationEmail = async (orderData, customerData) => {
         try {
@@ -1155,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: productId,
                 title: elements.modalTitle.textContent,
                 qty: parseInt(elements.modalQtyInput.value, 10) || 1,
-                color: getModalColor(),
+                color: getModalColor().colorName, // Use colorName from getModalColor
                 price: price,
                 product_images: productImages
             };
@@ -1182,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: productId,
                 title: elements.modalTitle.textContent,
                 qty: parseInt(elements.modalQtyInput.value, 10) || 1,
-                color: getModalColor(),
+                color: getModalColor().colorName, // Use colorName from getModalColor
                 price: price,
                 product_images: productImages
             };
@@ -1210,8 +1380,11 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.modalColorDropdownList.addEventListener('click', (e) => {
             const option = e.target.closest('.shadcn-dropdown-option');
             if (option) {
-                setModalColor(option.dataset.color);
+                setModalColor(option.dataset.color, option.dataset.colorName, option.dataset.productColorId);
                 elements.modalColorDropdownList.style.display = 'none';
+                // Update modal images based on selected color
+                const productId = elements.productModal.dataset.productId;
+                updateModalImagesByColor(productId, option.dataset.productColorId);
             }
         });
 
@@ -1381,22 +1554,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 3D Model Color Swatches
-document.querySelectorAll('#colorSwatchContainer2 .color-swatch').forEach(swatch => {
-    swatch.addEventListener('click', function () {
-        const rgb = this.getAttribute('data-color');
-                applyMaterialChanges(elements.modelViewer2, rgb);
-        document.querySelectorAll('#colorSwatchContainer2 .color-swatch.active').forEach(el => el.classList.remove('active'));
-        this.classList.add('active');
-    });
-});
+        // This section is now handled by update3DModelColors and updateModalImagesByColor
+        // document.querySelectorAll('#colorSwatchContainer2 .color-swatch').forEach(swatch => {
+        //     swatch.addEventListener('click', function () {
+        //         const rgb = this.getAttribute('data-color');
+        //                 applyMaterialChanges(elements.modelViewer2, rgb);
+        //         document.querySelectorAll('#colorSwatchContainer2 .color-swatch.active').forEach(el => el.classList.remove('active'));
+        //         this.classList.add('active');
+        //     });
+        // });
 
         if (elements.modelViewer2) {
             elements.modelViewer2.addEventListener("load", () => {
-                const firstSwatch = document.querySelector('#colorSwatchContainer2 .color-swatch');
-                if (firstSwatch) {
-                    firstSwatch.classList.add('active');
-                    applyMaterialChanges(elements.modelViewer2, firstSwatch.getAttribute('data-color'));
-                }
+                // update3DModelColors(); // This will be called by openModal
             });
         }
     }
@@ -1407,6 +1577,9 @@ document.querySelectorAll('#colorSwatchContainer2 .color-swatch').forEach(swatch
     
     // Initialize currency system
     initializeCurrency();
+    
+    // Initialize 3D model colors from database
+    update3DModelColors();
     
     // Load products with lazy loading
     loadProducts();

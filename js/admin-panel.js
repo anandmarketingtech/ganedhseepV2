@@ -6,6 +6,10 @@ let managedImageFiles = []; // Array to hold all images with their order
 let sortableInstance = null;
 let productsSortableInstance = null;
 
+// Color management
+let allColors = [];
+let selectedProductColors = []; // Array of selected color IDs for the product
+
 // First enforce authentication
 (async function init() {
     const isAuthenticated = await enforceAuth();
@@ -25,6 +29,9 @@ function initializeAdminPanel() {
     
     // Image upload handlers
     setupImageUpload();
+    
+    // Initialize color system
+    initializeColorSelection();
     
     // Form submission - remove auto-submit, only validate
     productForm.addEventListener('submit', (e) => {
@@ -87,6 +94,173 @@ async function validateForm() {
     }
     
     return true;
+}
+
+// --- COLOR MANAGEMENT FUNCTIONS ---
+
+async function initializeColorSelection() {
+    try {
+        // Fetch all colors from database
+        const { data: colors, error } = await supabase
+            .from('colors')
+            .select('*')
+            .order('name');
+        
+        if (error) throw error;
+        
+        allColors = colors || [];
+        renderColorSelection();
+    } catch (error) {
+        console.error('Error fetching colors:', error);
+        // You might want to show an error message to the user
+    }
+}
+
+function renderColorSelection() {
+    // Find or create color selection container in the form
+    let colorContainer = document.getElementById('colorSelectionContainer');
+    if (!colorContainer) {
+        // Create color selection section in the form
+        const formContainer = document.querySelector('.product-form');
+        const statusGroup = document.querySelector('#status').closest('.form-group');
+        
+        colorContainer = document.createElement('div');
+        colorContainer.id = 'colorSelectionContainer';
+        colorContainer.className = 'form-group';
+        colorContainer.innerHTML = `
+            <label>Available Colors</label>
+            <p style="font-size: 0.9em; color: #666; margin: 5px 0;">
+                <strong>Step 1:</strong> Select colors that will be available for this product. 
+                <br><strong>Step 2:</strong> Upload images and assign each image to a specific color.
+            </p>
+            <div id="colorGrid" class="color-grid"></div>
+            <button type="button" id="addNewColorBtn" class="btn" style="background: #28a745; color: white; margin-top: 10px;">
+                Add New Color
+            </button>
+        `;
+        
+        // Insert before status group
+        statusGroup.parentNode.insertBefore(colorContainer, statusGroup);
+    }
+    
+    const colorGrid = document.getElementById('colorGrid');
+    
+    if (allColors.length === 0) {
+        colorGrid.innerHTML = '<p>No colors available. Add colors first.</p>';
+        return;
+    }
+    
+    colorGrid.innerHTML = allColors.map(color => `
+        <div class="color-option" data-color-id="${color.id}">
+            <input type="checkbox" id="color_${color.id}" value="${color.id}" 
+                   ${selectedProductColors.includes(color.id) ? 'checked' : ''}>
+            <label for="color_${color.id}" class="color-label">
+                <span class="color-swatch" style="background-color: ${color.hex_code || '#808080'};"></span>
+                <span class="color-name">${color.name}</span>
+            </label>
+        </div>
+    `).join('');
+    
+    // Add change listeners
+    colorGrid.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedColors);
+    });
+    
+    // Add new color button handler
+    const addColorBtn = document.getElementById('addNewColorBtn');
+    if (addColorBtn) {
+        addColorBtn.addEventListener('click', showAddColorModal);
+    }
+}
+
+function updateSelectedColors() {
+    const checkboxes = document.querySelectorAll('#colorGrid input[type="checkbox"]:checked');
+    const previousCount = selectedProductColors.length;
+    selectedProductColors = Array.from(checkboxes).map(cb => cb.value);
+    console.log('Selected colors:', selectedProductColors);
+    
+    // Show helpful message if colors were just selected for the first time
+    if (previousCount === 0 && selectedProductColors.length > 0) {
+        showColorSelectionMessage();
+    }
+    
+    // Update image preview to refresh color dropdowns
+    updateImagePreview();
+}
+
+function showColorSelectionMessage() {
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #d4edda;
+        color: #155724;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #c3e6cb;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-size: 0.9rem;
+        max-width: 300px;
+    `;
+    notification.innerHTML = `
+        <strong>Great!</strong> Now you can upload images and assign them to specific colors.
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 4 seconds
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.style.transition = 'opacity 0.3s';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 4000);
+}
+
+function showAddColorModal() {
+    const colorName = prompt('Enter color name:');
+    if (!colorName) return;
+    
+    const hexCode = prompt('Enter hex code (e.g., #FF0000):');
+    if (!hexCode) return;
+    
+    // Validate hex code
+    const hexPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexPattern.test(hexCode)) {
+        alert('Invalid hex code format. Please use format like #FF0000');
+        return;
+    }
+    
+    addNewColor(colorName, hexCode);
+}
+
+async function addNewColor(name, hexCode) {
+    try {
+        const { data, error } = await supabase
+            .from('colors')
+            .insert([{ name, hex_code: hexCode }])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        // Add to local array and re-render
+        allColors.push(data);
+        renderColorSelection();
+        
+        alert('Color added successfully!');
+    } catch (error) {
+        console.error('Error adding color:', error);
+        alert('Error adding color: ' + error.message);
+    }
 }
 
 function setupImageUpload() {
@@ -163,7 +337,8 @@ function addFilesToManaged(files) {
         file: file,
         image_url: URL.createObjectURL(file),
         order: managedImageFiles.length + index,
-        isNew: true
+        isNew: true,
+        assignedColorId: null // No color assigned initially
     }));
     
     managedImageFiles.push(...newImages);
@@ -220,11 +395,43 @@ function createImagePreviewItem(imageData, index) {
     imageItem.className = 'image-preview-item';
     imageItem.setAttribute('data-id', imageData.id);
     
+    // Create color options for dropdown
+    const hasSelectedColors = selectedProductColors.length > 0;
+    const colorOptions = [
+        '<option value="">General (No Color)</option>',
+        ...selectedProductColors.map(colorId => {
+            const color = allColors.find(c => c.id === colorId);
+            const isSelected = imageData.assignedColorId === colorId ? 'selected' : '';
+            return `<option value="${colorId}" ${isSelected}>${color ? color.name : 'Unknown Color'}</option>`;
+        })
+    ].join('');
+    
+    // Get assigned color name for display
+    let assignedColorName = 'General';
+    if (imageData.assignedColorId) {
+        const assignedColor = allColors.find(c => c.id === imageData.assignedColorId);
+        assignedColorName = assignedColor ? assignedColor.name : 'Unknown Color';
+    }
+    
     imageItem.innerHTML = `
         <div class="image-order">${index + 1}</div>
         <img src="${imageData.image_url}" alt="Preview" draggable="false">
+        <div class="image-color-selector">
+            <label class="color-selector-label">Color:</label>
+            ${hasSelectedColors ? `
+                <select class="image-color-dropdown" data-image-id="${imageData.id}">
+                    ${colorOptions}
+                </select>
+            ` : `
+                <div class="no-colors-message">
+                    <small>Select product colors first</small>
+                    <span class="assigned-color">General</span>
+                </div>
+            `}
+        </div>
         <div class="image-info ${imageData.isNew ? 'new' : 'existing'}">
-            ${imageData.isNew ? 'New' : 'Existing'}
+            <span class="status-text">${imageData.isNew ? 'New' : 'Existing'}</span>
+            <span class="assigned-color-badge" style="background-color: ${getColorBadgeColor(imageData.assignedColorId)}">${assignedColorName}</span>
         </div>
         <button type="button" class="remove-image" data-image-id="${imageData.id}">×</button>
     `;
@@ -238,7 +445,27 @@ function createImagePreviewItem(imageData, index) {
         removeImage(imageId);
     });
     
+    // Add change handler for color dropdown (if it exists)
+    const colorDropdown = imageItem.querySelector('.image-color-dropdown');
+    if (colorDropdown) {
+        colorDropdown.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const imageId = e.target.getAttribute('data-image-id');
+            const selectedColorId = e.target.value || null;
+            updateImageColorAssignment(imageId, selectedColorId);
+            
+            // Update the visual feedback immediately
+            updateImagePreview();
+        });
+    }
+    
     return imageItem;
+}
+
+function getColorBadgeColor(colorId) {
+    if (!colorId) return '#6c757d'; // Gray for general
+    const color = allColors.find(c => c.id === colorId);
+    return color ? color.hex_code : '#6c757d';
 }
 
 function updateOrderNumbers() {
@@ -250,6 +477,14 @@ function updateOrderNumbers() {
             }
         });
     }
+
+function updateImageColorAssignment(imageId, colorId) {
+    const image = managedImageFiles.find(img => img.id === imageId);
+    if (image) {
+        image.assignedColorId = colorId;
+        console.log(`Image ${imageId} assigned to color ${colorId}`);
+    }
+}
 
 function removeImage(imageId) {
     const index = managedImageFiles.findIndex(img => img.id === imageId);
@@ -338,6 +573,11 @@ window.saveProduct = async function() {
         // Handle images - this is crucial for uploading to Supabase storage
         if (managedImageFiles.length > 0) {
             await handleImageUploads(savedProduct.id, isEditing);
+        }
+        
+        // Handle product colors
+        if (selectedProductColors.length > 0) {
+            await handleProductColors(savedProduct.id, isEditing);
         }
         
         // Reset form and reload products
@@ -446,12 +686,32 @@ async function handleImageUploads(productId, isEditing) {
             
             // Create database record for the image
             console.log('Creating database record for image...');
+            
+            // Determine the product_color_id based on assigned color
+            let productColorId = null;
+            if (imageData.assignedColorId) {
+                // Find the product_color record for this product and color
+                const { data: productColorData, error: productColorError } = await supabase
+                    .from('product_colors')
+                    .select('id')
+                    .eq('product_id', productId)
+                    .eq('color_id', imageData.assignedColorId)
+                    .single();
+                
+                if (productColorError) {
+                    console.warn('Could not find product_color record:', productColorError);
+                } else {
+                    productColorId = productColorData.id;
+                }
+            }
+            
             const { error: dbError } = await supabase
                 .from('product_images')
                 .insert({
                     product_id: productId,
                     image_url: imageUrl,
-                    order: index
+                    order: index,
+                    product_color_id: productColorId
                 });
             
             if (dbError) {
@@ -470,9 +730,53 @@ async function handleImageUploads(productId, isEditing) {
     }
 }
 
+async function handleProductColors(productId, isEditing) {
+    try {
+        console.log('Handling product colors for product:', productId);
+        console.log('Selected colors:', selectedProductColors);
+        
+        // If editing, first delete existing product colors
+        if (isEditing) {
+            const { error: deleteError } = await supabase
+                .from('product_colors')
+                .delete()
+                .eq('product_id', productId);
+            
+            if (deleteError) {
+                console.error('Error deleting existing product colors:', deleteError);
+                throw deleteError;
+            }
+        }
+        
+        // Insert new product colors
+        if (selectedProductColors.length > 0) {
+            const productColors = selectedProductColors.map(colorId => ({
+                product_id: productId,
+                color_id: colorId,
+                is_multi_color: selectedProductColors.length > 1
+            }));
+            
+            const { error: insertError } = await supabase
+                .from('product_colors')
+                .insert(productColors);
+            
+            if (insertError) {
+                console.error('Error inserting product colors:', insertError);
+                throw insertError;
+            }
+            
+            console.log('Product colors saved successfully');
+        }
+        
+    } catch (error) {
+        console.error('Error in handleProductColors:', error);
+        throw error;
+    }
+}
+
 function resetForm() {
-                document.getElementById('productForm').reset();
-                document.getElementById('productId').value = '';
+    document.getElementById('productForm').reset();
+    document.getElementById('productId').value = '';
     
     // Clear managed images
     managedImageFiles.forEach(img => {
@@ -482,8 +786,14 @@ function resetForm() {
     });
     managedImageFiles = [];
     
+    // Clear selected colors
+    selectedProductColors = [];
+    
     // Clear image preview
     updateImagePreview();
+    
+    // Re-render color selection to clear checkboxes
+    renderColorSelection();
     
     // Re-setup image upload to ensure clean state
     setupImageUpload();
@@ -498,7 +808,8 @@ async function loadProducts() {
                 product_images (
                     id,
                     image_url,
-                    "order"
+                    "order",
+                    product_color_id
                 )
             `)
             .order('order', { ascending: true })
@@ -765,6 +1076,16 @@ window.editProduct = async function(productId) {
                     id,
                     image_url,
                     "order"
+                ),
+                product_colors (
+                    id,
+                    color_id,
+                    is_multi_color,
+                    colors (
+                        id,
+                        name,
+                        hex_code
+                    )
                 )
             `)
             .eq('id', productId)
@@ -783,14 +1104,32 @@ window.editProduct = async function(productId) {
         // Set images
         managedImageFiles = (product.product_images || [])
             .sort((a, b) => (a.order || 0) - (b.order || 0))
-            .map(img => ({
-                id: img.id,
-                image_url: img.image_url,
-                order: img.order || 0,
-                isNew: false
-            }));
+            .map(img => {
+                // Find the color_id from product_color_id
+                let assignedColorId = null;
+                if (img.product_color_id) {
+                    const productColor = (product.product_colors || []).find(pc => pc.id === img.product_color_id);
+                    if (productColor) {
+                        assignedColorId = productColor.color_id;
+                    }
+                }
+                
+                return {
+                    id: img.id,
+                    image_url: img.image_url,
+                    order: img.order || 0,
+                    isNew: false,
+                    assignedColorId: assignedColorId
+                };
+            });
+        
+        // Set colors
+        selectedProductColors = (product.product_colors || []).map(pc => pc.color_id);
         
         updateImagePreview();
+        
+        // Re-render color selection to show selected colors
+        renderColorSelection();
         
         // Scroll to form
         document.querySelector('.product-form').scrollIntoView({ behavior: 'smooth' });

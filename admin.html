@@ -157,6 +157,7 @@
       /* Image Preview */
       #imagePreview {
         margin-top: 10px;
+        margin-bottom: 10px;
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -239,10 +240,25 @@
         background: #fff;
         flex-shrink: 0;
         width: 120px;
-        height: 140px;
-        touch-action: none;
+        min-height: 180px;
         display: flex;
         flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        touch-action: none;
+      }
+
+      .image-preview-item img {
+        width: 100%;
+        max-height: 70px;
+        min-height: 50px;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+        user-select: none;
+        -webkit-user-drag: none;
+        border-bottom: 1px solid #eee;
+        background: #f8f8f8;
       }
 
       .image-preview-item:hover {
@@ -270,16 +286,6 @@
         opacity: 0.8;
         transform: rotate(5deg) scale(1.1);
         z-index: 1001;
-      }
-
-      .image-preview-item img {
-        width: 100%;
-        height: 100px;
-        object-fit: cover;
-        display: block;
-        pointer-events: none;
-        user-select: none;
-        -webkit-user-drag: none;
       }
 
       .image-preview-item .image-order {
@@ -340,6 +346,105 @@
         color: #856404;
       }
 
+      .image-color-selector {
+        padding: 6px;
+        background: #fff;
+        border-top: 1px solid #e0e0e0;
+        font-size: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .color-selector-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #555;
+        margin: 0;
+      }
+
+      .image-color-dropdown {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        background: #fff;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .image-color-dropdown:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+
+      .image-color-dropdown:hover {
+        border-color: #007bff;
+      }
+
+      .no-colors-message {
+        text-align: center;
+        padding: 2px;
+      }
+
+      .no-colors-message small {
+        display: block;
+        color: #999;
+        font-size: 0.65rem;
+      }
+
+      .assigned-color {
+        display: block;
+        font-size: 0.7rem;
+        color: #666;
+        font-weight: 500;
+      }
+
+      .image-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        align-items: center;
+        padding: 4px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      .status-text {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 8px;
+        font-weight: 500;
+      }
+
+      .image-info.new .status-text {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .image-info.existing .status-text {
+        background: #e8f5e8;
+        color: #28a745;
+      }
+
+      .assigned-color-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       /* Custom scrollbar for image container */
       .image-preview-container::-webkit-scrollbar {
         height: 8px;
@@ -368,11 +473,16 @@
         
         .image-preview-item {
           width: 100px;
-          height: 120px;
+          height: 150px; /* Increased for mobile to accommodate improved interface */
         }
         
         .image-preview-item img {
-          height: 80px;
+          height: 60px; /* Reduced to make room for color selector */
+        }
+        
+        .image-color-dropdown {
+          font-size: 0.7rem;
+          padding: 3px;
         }
       }
 
@@ -570,6 +680,89 @@
         transform: rotate(3deg) scale(1.05) !important;
         z-index: 1001 !important;
       }
+
+      /* Color Selection Styles */
+      .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+        margin: 10px 0;
+        padding: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #f9f9f9;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .color-option {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.2s;
+      }
+
+      .color-option:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .color-option input[type="checkbox"] {
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .color-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        flex: 1;
+        font-size: 0.9rem;
+      }
+
+      .color-swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        margin-right: 8px;
+        border: 2px solid #ddd;
+        display: inline-block;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      .color-name {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .color-option input[type="checkbox"]:checked + .color-label {
+        font-weight: 600;
+      }
+
+      .color-option input[type="checkbox"]:checked + .color-label .color-swatch {
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+
+      #addNewColorBtn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+      }
+
+      #addNewColorBtn:hover {
+        background: #218838 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+      }
     </style>
   </head>
   <body>
@@ -627,9 +820,15 @@
           </div>
           <div class="form-group">
             <label for="image">Product Images</label>
+            <p style="font-size: 0.9em; color: #666; margin: 5px 0;">Upload images and assign them to specific colors. Images marked as "General" will be shown for all colors.</p>
             <div class="image-upload-container">
               <input type="file" id="image" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" multiple />
-              <div class="upload-hint">Drag and drop images here or click to select multiple images</div>
+              <div class="upload-hint">
+                📸 Drag and drop images here or click to select multiple images
+                <br><small style="color: #888; margin-top: 5px; display: block;">
+                  💡 Tip: Select colors first, then you can assign each image to a specific color
+                </small>
+              </div>
             </div>
             <div id="imagePreview" class="image-preview-container">
               <!-- Images will be displayed here -->
