@@ -619,70 +619,44 @@ async function handleImageUploads(productId, isEditing) {
             
             console.log(`Processing image ${index + 1}:`, imageData);
             
-            // If it's a new file (has a File object), upload it to Supabase storage
+            // If it's a new file (has a File object), upload it to ImgBB
             if (imageData.isNew && imageData.file) {
-                console.log('Uploading new image file to storage...');
+                console.log('Uploading new image file to ImgBB...');
                 
-                // Create a unique filename
-                const fileExtension = imageData.file.name.split('.').pop();
-                const fileName = `product_${productId}_${Date.now()}_${index}.${fileExtension}`;
-                
-                console.log('Uploading with filename:', fileName);
-                
-                // Upload to Supabase storage
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('products')
-                .upload(fileName, imageData.file, {
-                  contentType: imageData.file.type,
-                  cacheControl: '3600',
-                  upsert: false,
-                  headers: {
-                    Authorization: `Bearer ${supabaseKey}`,
-                    'X-Client-Info': 'supabase-js-web/2.50.2'
-                  }
-              
-                });
-                
-                if (uploadError) {
-                    console.error('Storage upload error:', uploadError);
+                try {
+                    // Create FormData for ImgBB upload
+                    const formData = new FormData();
+                    formData.append('image', imageData.file);
                     
-                    // Handle specific error cases
-                    if (uploadError.message && uploadError.message.includes('Bucket not found')) {
-                        throw new Error(
-                            'Storage bucket "products" not found. Please create it in your Supabase dashboard:\n' +
-                            '1. Go to Storage in your Supabase dashboard\n' +
-                            '2. Create a new bucket named "products"\n' +
-                            '3. Make it public\n' +
-                            '4. Set appropriate file size limits and allowed file types'
-                        );
-                    } else if (uploadError.message && (uploadError.message.includes('row-level security policy') || uploadError.message.includes('Unauthorized') || uploadError.code === 'DatabaseError')) {
-                        throw new Error(
-                            'Storage permissions error. You need to set up storage policies:\n\n' +
-                            '🔧 QUICK FIX:\n' +
-                            '1. Go to your Supabase Dashboard\n' +
-                            '2. Storage > Policies\n' +
-                            '3. Click on "products" bucket\n' +
-                            '4. Create these 2 essential policies:\n\n' +
-                            '   📤 UPLOAD Policy:\n' +
-                            '   • Policy name: "Allow authenticated uploads"\n' +
-                            '   • Operation: INSERT\n' +
-                            '   • Target roles: authenticated\n' +
-                            '   • Policy: ((bucket_id = \'products\'::text) AND (auth.role() = \'authenticated\'::text))\n\n' +
-                            '   👁️ VIEW Policy:\n' +
-                            '   • Policy name: "Allow public viewing"\n' +
-                            '   • Operation: SELECT\n' +
-                            '   • Target roles: public\n' +
-                            '   • Policy: (bucket_id = \'products\'::text)\n\n' +
-                            '5. Save both policies and try again\n\n' +
-                            'For detailed instructions, see STORAGE_SETUP.md'
-                        );
-                    } else {
-                        throw uploadError;
+                    console.log('Uploading to ImgBB...');
+                    
+                    // Upload to ImgBB
+                    const response = await fetch('https://api.imgbb.com/1/upload?key=e3fa9a29e007c2f610420bdd62518a42', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`ImgBB upload failed: ${response.status} ${response.statusText}`);
                     }
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error('ImgBB upload failed: ' + (result.error?.message || 'Unknown error'));
+                    }
+                    
+                    // Use the display_url from ImgBB response
+                    imageUrl = result.data.display_url;
+                    console.log('Image uploaded successfully to ImgBB:', imageUrl);
+                    
+                    // Clean up the blob URL
+                    URL.revokeObjectURL(imageData.image_url);
+                    
+                } catch (uploadError) {
+                    console.error('ImgBB upload error:', uploadError);
+                    throw new Error(`Failed to upload image to ImgBB: ${uploadError.message}`);
                 }
-                
-                imageUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
-                URL.revokeObjectURL(imageData.image_url);
             }
             
             // Create database record for the image
