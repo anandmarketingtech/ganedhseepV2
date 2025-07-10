@@ -332,9 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
             GBP: '£',
             AED: 'د.إ '
         };
-        
         const symbol = symbols[currency] || currency + ' ';
-        return `${symbol}${parseFloat(amount).toFixed(2)}`;
+        // Always show as integer (no decimals)
+        return `${symbol}${Math.round(amount)}`;
     }
     
     // Update all prices on the page
