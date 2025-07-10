@@ -570,14 +570,14 @@ window.saveProduct = async function() {
             savedProduct = data;
         }
         
-        // Handle images - this is crucial for uploading to Supabase storage
-        if (managedImageFiles.length > 0) {
-            await handleImageUploads(savedProduct.id, isEditing);
-        }
-        
-        // Handle product colors
+        // FIXED: Handle product colors BEFORE images to avoid foreign key constraint issues
         if (selectedProductColors.length > 0) {
             await handleProductColors(savedProduct.id, isEditing);
+        }
+        
+        // Handle images after colors are set up
+        if (managedImageFiles.length > 0) {
+            await handleImageUploads(savedProduct.id, isEditing);
         }
         
         // Reset form and reload products
@@ -735,8 +735,20 @@ async function handleProductColors(productId, isEditing) {
         console.log('Handling product colors for product:', productId);
         console.log('Selected colors:', selectedProductColors);
         
-        // If editing, first delete existing product colors
+        // If editing, safely delete existing product colors
         if (isEditing) {
+            // First, remove foreign key references from product_images by setting product_color_id to null
+            const { error: updateImagesError } = await supabase
+                .from('product_images')
+                .update({ product_color_id: null })
+                .eq('product_id', productId);
+            
+            if (updateImagesError) {
+                console.error('Error updating product images to remove color references:', updateImagesError);
+                throw updateImagesError;
+            }
+            
+            // Now safely delete existing product colors
             const { error: deleteError } = await supabase
                 .from('product_colors')
                 .delete()
