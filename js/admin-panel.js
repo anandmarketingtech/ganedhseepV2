@@ -410,7 +410,8 @@ function createImagePreviewItem(imageData, index) {
     let assignedColorName = 'General';
     if (imageData.assignedColorId) {
         const assignedColor = allColors.find(c => c.id === imageData.assignedColorId);
-        assignedColorName = assignedColor ? assignedColor.name : 'Unknown Color';
+        assignedColorName = assignedColor ? assignedColor.name : `Unknown Color (ID: ${imageData.assignedColorId})`;
+        console.log(`Image ${imageData.id} restored with color: ${assignedColorName}`);
     }
     
     imageItem.innerHTML = `
@@ -1087,7 +1088,8 @@ window.editProduct = async function(productId) {
                 product_images (
                     id,
                     image_url,
-                    "order"
+                    "order",
+                    product_color_id
                 ),
                 product_colors (
                     id,
@@ -1113,7 +1115,7 @@ window.editProduct = async function(productId) {
         document.getElementById('status').value = product.status;
         document.getElementById('price').value = product.price !== undefined ? product.price : '';
         
-        // Set images
+        // Set images with proper color assignment
         managedImageFiles = (product.product_images || [])
             .sort((a, b) => (a.order || 0) - (b.order || 0))
             .map(img => {
@@ -1123,7 +1125,12 @@ window.editProduct = async function(productId) {
                     const productColor = (product.product_colors || []).find(pc => pc.id === img.product_color_id);
                     if (productColor) {
                         assignedColorId = productColor.color_id;
+                        console.log(`Image ${img.id} assigned to color: ${productColor.colors.name} (ID: ${assignedColorId})`);
+                    } else {
+                        console.warn(`Product color with ID ${img.product_color_id} not found for image ${img.id}`);
                     }
+                } else {
+                    console.log(`Image ${img.id} has no color assignment (General)`);
                 }
                 
                 return {
@@ -1131,17 +1138,28 @@ window.editProduct = async function(productId) {
                     image_url: img.image_url,
                     order: img.order || 0,
                     isNew: false,
-                    assignedColorId: assignedColorId
+                    assignedColorId: assignedColorId,
+                    originalProductColorId: img.product_color_id // Store original for debugging
                 };
             });
         
         // Set colors
         selectedProductColors = (product.product_colors || []).map(pc => pc.color_id);
         
-        updateImagePreview();
+        // Ensure allColors is loaded before updating image preview
+        if (allColors.length === 0) {
+            console.log('Loading all colors for edit mode...');
+            await initializeColorSelection();
+        }
+        
+        console.log('Edit mode - Selected product colors:', selectedProductColors);
+        console.log('Edit mode - All colors available:', allColors.length);
         
         // Re-render color selection to show selected colors
         renderColorSelection();
+        
+        // Update image preview after colors are loaded
+        updateImagePreview();
         
         // Scroll to form
         document.querySelector('.product-form').scrollIntoView({ behavior: 'smooth' });

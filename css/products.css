@@ -6,18 +6,58 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow-x: hidden;
+    overflow-x: hidden !important; /* Force hide horizontal scrollbar */
     overflow-y: auto !important;
     scroll-behavior: smooth; /* Enable smooth scrolling */
     -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
     will-change: scroll-position;
     backface-visibility: hidden;
+    box-sizing: border-box;
+}
+
+/* Ensure all elements use border-box sizing to prevent overflow */
+*, *:before, *:after {
+    box-sizing: border-box;
 }
 
 /* Ensure body and main containers allow scrolling */
 body {
     overflow-y: auto !important;
+    overflow-x: hidden !important; /* Force hide horizontal scrollbar */
     scroll-behavior: smooth; /* Smoother scroll for body */
+    max-width: 100vw; /* Constrain to viewport width */
+}
+
+/* Ensure all major containers don't cause overflow */
+.container, .container-fluid {
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* Fix for any elements that might extend beyond viewport */
+.row, .col-12 {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* Comprehensive overflow prevention for all major layout elements */
+.hero-area, .sonar-projects-area, .footer-area, section, .mainMenu, .header-area {
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* Ensure modals don't cause overflow */
+#productModal, #cartModal, #buyNowModal {
+    max-width: 100vw;
+    box-sizing: border-box;
+}
+
+/* Ensure no element can extend beyond viewport */
+* {
+    max-width: 100vw;
 }
 
 /* Improved Add to Cart button styling */
@@ -135,25 +175,35 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 #modelsContainer {
     display: flex;
     gap: 1vw;
-    padding: 32px 0 100px 0;
+    padding: 32px 16px 100px 16px; /* Add horizontal padding to prevent edge overflow */
     justify-content: center;
     align-items: flex-start;
     background: var(--primary-bg);
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 model-viewer {
-    width: 44vw;
+    width: min(44vw, calc(50vw - 32px)); /* Ensure model viewer doesn't exceed safe bounds */
+    max-width: calc(50vw - 32px);
     height: 80vh;
     border-radius: 16px;
     box-shadow: var(--shadow);
     background: #f9f9f9;
     transition: box-shadow 0.2s, transform 0.2s;
     z-index: 1;
+    box-sizing: border-box;
 }
 
 model-viewer:hover {
@@ -362,12 +412,15 @@ model-viewer:hover {
         margin: 0 !important;
         padding: 0 !important;
         width: 100vw !important;
-        /* overflow-x: hidden !important; */
+        overflow-x: hidden !important; /* Enable this to prevent horizontal scroll */
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
     }
 
     body {
         box-sizing: border-box;
-        overflow: auto;
+        overflow-x: hidden !important; /* Prevent horizontal overflow */
+        overflow-y: auto;
     }
 
     #productModal {
