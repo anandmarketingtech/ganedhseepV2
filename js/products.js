@@ -86,13 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .select(`
                     id,
                     is_multi_color,
+                    is_default,
                     colors (
                         id,
                         name,
                         hex_code
                     )
                 `)
-                .eq('product_id', productId);
+                .eq('product_id', productId)
+                .order('is_default', { ascending: false }); // Default color first
             
             if (error) throw error;
             
@@ -853,20 +855,26 @@ document.addEventListener('DOMContentLoaded', () => {
                              data-color-id="${color.id}"
                              data-product-color-id="${productColor.id}"
                              data-color="${color.hex_code || '#808080'}"
-                             data-color-name="${color.name}">
+                             data-color-name="${color.name}"
+                             data-is-default="${productColor.is_default || false}">
                             <span class="shadcn-dropdown-swatch" style="background:${color.hex_code || '#808080'};"></span>
-                            <span>${color.name}</span>
+                            <span>${color.name}${productColor.is_default ? ' (Default)' : ''}</span>
                         </div>
                     `;
                 }).join('');
                 
-                // Set first color as default
-                const firstColor = currentProductColors[0].colors;
-                setModalColor(firstColor.hex_code || '#808080', firstColor.name, currentProductColors[0].id);
+                // Find the default color or use the first one as fallback
+                const defaultProductColor = currentProductColors.find(pc => pc.is_default) || currentProductColors[0];
+                const defaultColor = defaultProductColor.colors;
+                
+                console.log('Setting modal to default color:', defaultColor.name, 'isDefault:', defaultProductColor.is_default);
+                
+                // Set the default color as selected
+                setModalColor(defaultColor.hex_code || '#808080', defaultColor.name, defaultProductColor.id);
                 elements.modalColorGroup.style.display = 'block';
                 
                 // Load images for the default color
-                await updateModalImagesByColor(productId, currentProductColors[0].id);
+                await updateModalImagesByColor(productId, defaultProductColor.id);
             } else {
                 elements.modalColorGroup.style.display = 'none';
                 // Load default images (without color association)

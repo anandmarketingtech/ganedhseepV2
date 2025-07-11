@@ -129,58 +129,72 @@
     <div id="buyNowModal"
         style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10003;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
         <div
-            style="background:#fff;border-radius:12px;max-width:450px;width:95vw;padding:32px 28px;position:relative;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
+            style="background:#fff;border-radius:12px;max-width:900px;width:95vw;position:relative;box-shadow:0 10px 50px rgba(0,0,0,0.18);overflow:hidden;">
             <button id="closeBuyNowModal"
-                style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
-            <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Complete Your Order</h3>
-            <div id="orderSummary" style="background:#f8f9fa;padding:16px;border-radius:8px;margin-bottom:24px;border:1px solid #e9ecef;">
-                <h4 style="margin:0 0 12px 0;color:#333;font-size:1.1em;">Order Summary</h4>
-                <div id="orderItems" style="margin-bottom:12px;"></div>
-                <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-weight:600;color:#333;">Total:</span>
-                    <span id="orderTotal" style="font-weight:700;color:#28a745;font-size:1.3em;">Rs. 0.00</span>
-                </div>
+                style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;z-index:10;">&times;</button>
+            
+            <!-- Header -->
+            <div class="modal-header" style="padding:24px 32px;text-align:center;border-bottom:1px solid #e9ecef;">
+                <h3 style="margin:0;font-size:1.5em;color:#23232b;">Complete Your Order</h3>
             </div>
-            <form id="buyNowForm" autocomplete="off">
-                <div style="margin-bottom:18px;">
-                    <label for="buyerName" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Full
-                        Name</label>
-                    <input id="buyerName" name="buyerName" type="text" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+            
+            <!-- Horizontal Layout Container -->
+            <div class="horizontal-layout" style="display:flex;min-height:500px;">
+                
+                <!-- Left Side - Form -->
+                <div class="form-section" style="flex:1;padding:32px;background:#fff;">
+                    <h4 style="margin:0 0 20px 0;color:#333;font-size:1.1em;">Customer Information</h4>
+                    <form id="buyNowForm" autocomplete="off">
+                        <div style="margin-bottom:18px;">
+                            <label for="buyerName" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Full Name</label>
+                            <input id="buyerName" name="buyerName" type="text" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:18px;">
+                            <label for="buyerEmail" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Email Address</label>
+                            <input id="buyerEmail" name="buyerEmail" type="email" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:18px;">
+                            <label for="buyerPhone" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Phone Number</label>
+                            <input id="buyerPhone" name="buyerPhone" type="tel" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:22px;">
+                            <label for="buyerAddress" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Delivery Address</label>
+                            <textarea id="buyerAddress" name="buyerAddress" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+                        </div>
+                        <button id="buyNowSubmitBtn" type="submit"
+                            style="width:100%;background:linear-gradient(to right, #23232b, #3a3a4a);color:#fff;font-size:1.1em;font-weight:600;border:none;border-radius:8px;padding:14px 0;cursor:pointer;position:relative;transition:transform 0.2s, box-shadow 0.2s;">
+                            Place Order
+                            <span id="buyNowLoader" style="display:none;margin-left:10px;vertical-align:middle;">
+                                <svg width="22" height="22" viewBox="0 0 50 50">
+                                    <circle cx="25" cy="25" r="20" fill="none" stroke="#fff" stroke-width="5"
+                                        stroke-linecap="round" stroke-dasharray="31.415, 31.415"
+                                        transform="rotate(72.0001 25 25)">
+                                        <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite"
+                                            dur="0.8s" from="0 25 25" to="360 25 25" />
+                                    </circle>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
                 </div>
-                <div style="margin-bottom:18px;">
-                    <label for="buyerEmail" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Email
-                        Address</label>
-                    <input id="buyerEmail" name="buyerEmail" type="email" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                
+                <!-- Right Side - Order Summary -->
+                <div class="order-section" style="flex:1;background:#f8f9fa;border-left:1px solid #e9ecef;padding:32px;">
+                    <div id="orderSummary">
+                        <h4 style="margin:0 0 20px 0;color:#333;font-size:1.1em;">Order Summary</h4>
+                        <div id="orderItems" style="margin-bottom:20px;"></div>
+                        <div style="border-top:1px solid #ddd;padding-top:16px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-weight:600;color:#333;font-size:1.1em;">Total:</span>
+                            <span id="orderTotal" style="font-weight:700;color:#28a745;font-size:1.4em;">Rs. 0.00</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-bottom:18px;">
-                    <label for="buyerPhone" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Phone
-                        Number</label>
-                    <input id="buyerPhone" name="buyerPhone" type="tel" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:22px;">
-                    <label for="buyerAddress"
-                        style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Delivery Address</label>
-                    <textarea id="buyerAddress" name="buyerAddress" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
-                </div>
-                <button id="buyNowSubmitBtn" type="submit"
-                    style="width:100%;background:linear-gradient(to right, #23232b, #3a3a4a);color:#fff;font-size:1.1em;font-weight:600;border:none;border-radius:8px;padding:14px 0;cursor:pointer;position:relative;transition:transform 0.2s, box-shadow 0.2s;">
-                    Place Order
-                    <span id="buyNowLoader" style="display:none;margin-left:10px;vertical-align:middle;">
-                        <svg width="22" height="22" viewBox="0 0 50 50">
-                            <circle cx="25" cy="25" r="20" fill="none" stroke="#fff" stroke-width="5"
-                                stroke-linecap="round" stroke-dasharray="31.415, 31.415"
-                                transform="rotate(72.0001 25 25)">
-                                <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite"
-                                    dur="0.8s" from="0 25 25" to="360 25 25" />
-                            </circle>
-                        </svg>
-                    </span>
-                </button>
-            </form>
+                
+            </div>
         </div>
     </div>
 
@@ -1294,6 +1308,38 @@
             @media (max-width: 480px) {
                 #cartModal {
                     width: 100vw;
+                }
+            }
+
+            /* Responsive Buy Now Modal */
+            @media (max-width: 768px) {
+                #buyNowModal .horizontal-layout {
+                    flex-direction: column !important;
+                }
+                
+                #buyNowModal .form-section {
+                    border-bottom: 1px solid #e9ecef !important;
+                }
+                
+                #buyNowModal .order-section {
+                    border-left: none !important;
+                    border-top: 1px solid #e9ecef !important;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                #buyNowModal > div {
+                    max-width: 95vw !important;
+                    margin: 10px !important;
+                }
+                
+                #buyNowModal .form-section,
+                #buyNowModal .order-section {
+                    padding: 20px !important;
+                }
+                
+                #buyNowModal .modal-header {
+                    padding: 20px !important;
                 }
             }
 
