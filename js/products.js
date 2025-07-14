@@ -503,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="cart-grand-total">Grand Total: ${formatCurrency(convertedTotalPrice, currentCurrency)}</span>
                     </div>
                 </div>
+                
             `;
             
             elements.cartItemsDiv.innerHTML = cartItemsHTML + cartTotalHTML;

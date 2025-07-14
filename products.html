@@ -118,7 +118,66 @@
             <div id="cartEmptyMsg">Your cart is empty.</div>
         </div>
         <div class="cart-total">
-            <button id="cartBuyNowBtn" disabled>Buy Now</button>
+            <div class="terms" style="text-align: center; margin: 18px 0 0 0;">
+                <label style="font-size: 15px; color: #333; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <input type="checkbox" id="acceptTerms" style="margin-right: 8px; width: 18px; height: 18px; accent-color: #28a745;" />
+                    <span>I accept the <a href="return-policy.html" target="_blank" style="color: #007bff; text-decoration: underline;">Return Policy</a></span>
+                </label>
+            </div>
+            <button id="cartBuyNowBtn" disabled style="width: 95%; margin: 18px auto 10px auto; display: block; background: #6c757d; color: #fff; font-size: 1.2em; font-weight: 600; border: none; border-radius: 12px; padding: 16px 0; cursor: not-allowed; opacity: 0.7; transition: opacity 0.2s, background 0.2s;">Buy Now</button>
+            <script>
+                // Inline script for Terms acceptance logic (bugfix: always start unchecked and disabled)
+                document.addEventListener('DOMContentLoaded', function() {
+                  var termsCheckbox = document.getElementById('acceptTerms');
+                  var buyNowBtn = document.getElementById('cartBuyNowBtn');
+                  if (termsCheckbox && buyNowBtn) {
+                    // Always start unchecked and disabled, and force style
+                    termsCheckbox.checked = false;
+                    buyNowBtn.disabled = true;
+                    buyNowBtn.style.background = '#6c757d';
+                    buyNowBtn.style.cursor = 'not-allowed';
+                    buyNowBtn.style.opacity = '0.7';
+                    function updateBuyNowBtn() {
+                      if (termsCheckbox.checked) {
+                        buyNowBtn.disabled = false;
+                        buyNowBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                        buyNowBtn.style.cursor = 'pointer';
+                        buyNowBtn.style.opacity = '1';
+                      } else {
+                        buyNowBtn.disabled = true;
+                        buyNowBtn.style.background = '#6c757d';
+                        buyNowBtn.style.cursor = 'not-allowed';
+                        buyNowBtn.style.opacity = '0.7';
+                      }
+                    }
+                    termsCheckbox.addEventListener('change', updateBuyNowBtn);
+                    // Defensive: Prevent Buy Now if not checked, even if button is enabled
+                    buyNowBtn.addEventListener('click', function(e) {
+                      if (buyNowBtn.disabled || !termsCheckbox.checked) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        buyNowBtn.blur();
+                        return false;
+                      }
+                    }, true);
+                    // If modal is opened dynamically, always reset state
+                    var cartModal = document.getElementById('cartModal');
+                    if (cartModal) {
+                      // Use MutationObserver to detect when modal is shown (style.transform changes)
+                      var prevTransform = cartModal.style.transform;
+                      var observer = new MutationObserver(function() {
+                        var currentTransform = cartModal.style.transform;
+                        if (prevTransform !== currentTransform && currentTransform === 'translateX(0%)') {
+                          termsCheckbox.checked = false;
+                          updateBuyNowBtn();
+                        }
+                        prevTransform = currentTransform;
+                      });
+                      observer.observe(cartModal, { attributes: true, attributeFilter: ['style'] });
+                    }
+                  }
+                });
+            </script>
         </div>
     </div>
     <div id="cartModalOverlay"
@@ -127,13 +186,13 @@
 
     <!-- Buy Now Modal -->
     <div id="buyNowModal"
-        style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10003;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+        style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10003;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;overflow: scroll;">
         <div
             style="background:#fff;border-radius:12px;max-width:450px;width:95vw;padding:32px 28px;position:relative;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
             <button id="closeBuyNowModal"
                 style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
             <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Complete Your Order</h3>
-            <div id="orderSummary" style="background:#f8f9fa;padding:16px;border-radius:8px;margin-bottom:24px;border:1px solid #e9ecef;">
+            <div id="orderSummary" style="background:#f8f9fa;padding:200px 16px 16px 16px;border-radius:8px;margin-bottom:24px;border:1px solid #e9ecef;">
                 <h4 style="margin:0 0 12px 0;color:#333;font-size:1.1em;">Order Summary</h4>
                 <div id="orderItems" style="margin-bottom:12px;"></div>
                 <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
