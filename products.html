@@ -86,7 +86,8 @@
 
 <body>
     <!-- Currency Selector -->
-    <div style="position:fixed;top:90px;right:min(90px, 5vw);z-index:10001;max-width:calc(100vw - 20px);box-sizing:border-box;">
+    <div style="position:fixed;top: 25px;
+    left: 74%;z-index:10001;max-width:calc(100vw - 20px);box-sizing:border-box;">
         <select id="currencySelector"
             style="background:#23232b;color:#fff;border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:0.9em;cursor:pointer;min-width:80px;max-width:calc(100vw - 40px);box-sizing:border-box;">
             <option value="NPR">NPR</option>
@@ -184,63 +185,160 @@
     </div>
 
     <!-- Buy Now Modal -->
-    <div id="buyNowModal"
-        style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10003;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;overflow: scroll;">
-        <div
-            style="background:#fff;border-radius:12px;max-width:450px;width:95vw;padding:32px 28px;position:relative;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
-            <button id="closeBuyNowModal"
-                style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
-            <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Complete Your Order</h3>
-            <div id="orderSummary" style="background:#f8f9fa;padding:200px 16px 16px 16px;border-radius:8px;margin-bottom:24px;border:1px solid #e9ecef;">
-                <h4 style="margin:0 0 12px 0;color:#333;font-size:1.1em;">Order Summary</h4>
-                <div id="orderItems" style="margin-bottom:12px;"></div>
-                <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-weight:600;color:#333;">Total:</span>
-                    <span id="orderTotal" style="font-weight:700;color:#28a745;font-size:1.3em;">Rs. 0.00</span>
+    <div id="buyNowModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;max-width:450px;z-index:10003;background:transparent;">
+        <div class="flip-container first" style="perspective: 1000px; width: 100%; height: auto; position: relative;">
+            <div class="flipper" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
+                <!-- Front Side (Buy Now) -->
+                <div class="front" style="top: -30%;
+    left: 65%; background:#fff;border-radius:12px;width:100%;padding:32px 28px;position:relative;backface-visibility:hidden;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
+                    <button class="modal-close" onclick="hideBuyNowModal()" style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
+                    <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Order Summary</h3>
+                    <div id="orderSummary" style="background:#f8f9fa;padding:32px 16px 16px 16px;border-radius:8px;margin-bottom:24px;border:1px solid #e9ecef;">
+                        <h4 style="margin:0 0 12px 0;color:#333;font-size:1.1em;">Items in Cart</h4>
+                        <div id="orderItems" style="margin-bottom:12px;"></div>
+                        <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-weight:600;color:#333;">Total:</span>
+                            <span id="orderTotal" style="font-weight:700;color:#28a745;font-size:1.3em;">Rs. 0.00</span>
+                        </div>
+                    </div>
+                    <button onclick="flipCard()" style="width:100%;background:linear-gradient(135deg, #28a745, #20c997);color:#fff;font-size:1.2em;font-weight:600;border:none;border-radius:12px;padding:16px 0;cursor:pointer;transition:all 0.2s;">
+                        Continue to Checkout
+                    </button>
+                </div>
+                
+                <!-- Back Side (Place Order Form) -->
+                <div class="back" style="top: -30%;             transform: rotateX(180deg);
+
+    left: 65%; background:#fff;border-radius:12px;width:100%;padding:32px 28px;position:absolute;backface-visibility:hidden;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
+                    <button class="modal-close" onclick="unflipCard()" style="position:absolute;top:14px;left:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">←</button>
+                    <button class="modal-close" onclick="document.getElementById('buyNowModal').style.display='none'" style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
+                    <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Complete Your Order</h3>
+                    <form id="buyNowForm" autocomplete="off">
+                        <div style="margin-bottom:18px;">
+                            <label for="buyerName" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Full Name</label>
+                            <input id="buyerName" name="buyerName" type="text" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:18px;">
+                            <label for="buyerEmail" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Email Address</label>
+                            <input id="buyerEmail" name="buyerEmail" type="email" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:18px;">
+                            <label for="buyerPhone" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Phone Number</label>
+                            <input id="buyerPhone" name="buyerPhone" type="tel" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-bottom:22px;">
+                            <label for="buyerAddress" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Delivery Address</label>
+                            <textarea id="buyerAddress" name="buyerAddress" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+                        </div>
+                        <button type="submit" style="width:100%;background:linear-gradient(135deg, #28a745, #20c997);color:#fff;font-size:1.2em;font-weight:600;border:none;border-radius:12px;padding:16px 0;cursor:pointer;transition:all 0.2s;">
+                            Place Order
+                            <span id="buyNowLoader" style="display:none;margin-left:10px;vertical-align:middle;">
+                                <svg width="22" height="22" viewBox="0 0 50 50">
+                                    <circle cx="25" cy="25" r="20" fill="none" stroke="#fff" stroke-width="5"
+                                        stroke-linecap="round" stroke-dasharray="31.415, 31.415"
+                                        transform="rotate(72.0001 25 25)">
+                                        <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite"
+                                            dur="0.8s" from="0 25 25" to="360 25 25" />
+                                    </circle>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
                 </div>
             </div>
-            <form id="buyNowForm" autocomplete="off">
-                <div style="margin-bottom:18px;">
-                    <label for="buyerName" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Full
-                        Name</label>
-                    <input id="buyerName" name="buyerName" type="text" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:18px;">
-                    <label for="buyerEmail" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Email
-                        Address</label>
-                    <input id="buyerEmail" name="buyerEmail" type="email" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:18px;">
-                    <label for="buyerPhone" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Phone
-                        Number</label>
-                    <input id="buyerPhone" name="buyerPhone" type="tel" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
-                </div>
-                <div style="margin-bottom:22px;">
-                    <label for="buyerAddress"
-                        style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Delivery Address</label>
-                    <textarea id="buyerAddress" name="buyerAddress" required
-                        style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
-                </div>
-                <button id="buyNowSubmitBtn" type="submit"
-                    style="width:100%;background:linear-gradient(to right, #23232b, #3a3a4a);color:#fff;font-size:1.1em;font-weight:600;border:none;border-radius:8px;padding:14px 0;cursor:pointer;position:relative;transition:transform 0.2s, box-shadow 0.2s;">
-                    Place Order
-                    <span id="buyNowLoader" style="display:none;margin-left:10px;vertical-align:middle;">
-                        <svg width="22" height="22" viewBox="0 0 50 50">
-                            <circle cx="25" cy="25" r="20" fill="none" stroke="#fff" stroke-width="5"
-                                stroke-linecap="round" stroke-dasharray="31.415, 31.415"
-                                transform="rotate(72.0001 25 25)">
-                                <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite"
-                                    dur="0.8s" from="0 25 25" to="360 25 25" />
-                            </circle>
-                        </svg>
-                    </span>
-                </button>
-            </form>
         </div>
     </div>
+
+    <style>
+        /* Card Flip Animation Styles */
+        .flip-container {
+            perspective: 1000px;
+        }
+        
+        .flipper {
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        
+        .front, .back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* Safari */
+        }
+        
+        .back {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-container.flipped .flipper {
+            transform: rotateX(180deg);
+        }
+
+        /* Hover effects for buttons */
+        button:not(.modal-close):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .front, .back {
+                padding: 24px 20px !important;
+            }
+        }
+    </style>
+
+    <script>
+        function flipCard() {
+            document.querySelector('.flip-container').classList.add('flipped');
+        }
+        
+        function unflipCard() {
+            document.querySelector('.flip-container').classList.remove('flipped');
+        }
+
+        function showBuyNowModal() {
+            const modal = document.getElementById('buyNowModal');
+            const overlay = document.getElementById('cartModalOverlay');
+            
+            // Show overlay
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.style.opacity = '1', 10);
+            
+            // Show modal
+            modal.style.display = 'block';
+            document.querySelector('.flip-container').classList.remove('flipped');
+        }
+
+        function hideBuyNowModal() {
+            const modal = document.getElementById('buyNowModal');
+            const overlay = document.getElementById('cartModalOverlay');
+            
+            // Hide overlay with fade
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 200);
+            
+            // Hide modal
+            modal.style.display = 'none';
+            document.querySelector('.flip-container').classList.remove('flipped');
+        }
+
+        // Initialize Buy Now button handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const buyNowButtons = document.querySelectorAll('.modal-buy-now');
+            buyNowButtons.forEach(button => {
+                button.addEventListener('click', showBuyNowModal);
+            });
+        });
+
+        // Update all modal close buttons
+        document.querySelectorAll('#buyNowModal .modal-close').forEach(btn => {
+            btn.onclick = () => hideBuyNowModal();
+        });
+    </script>
 
     <!-- Preloader Start -->
     <div id="preloader">
