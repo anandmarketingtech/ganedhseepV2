@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Ganeshdeep Knitwear - Premium Knitwear Products | Sweaters, Shawls, Designers</title>
     <meta name="description"
@@ -276,7 +275,6 @@
     </div>
     <!-- ***** Hero Area End ***** -->
 
-    <body>
 <!--         
         <div class="model-div">
             <div id="modelsContainer">
@@ -421,9 +419,6 @@
                     </div>
                 </div>
             </div>
-        </section>
-
-        </div>
         </section>
         <!-- ****** Gallery Area End ****** -->
 
@@ -1353,6 +1348,38 @@
             @media (max-width: 480px) {
                 #cartModal {
                     width: 100vw;
+                }
+            }
+
+            /* Responsive Buy Now Modal */
+            @media (max-width: 768px) {
+                #buyNowModal .horizontal-layout {
+                    flex-direction: column !important;
+                }
+                
+                #buyNowModal .form-section {
+                    border-bottom: 1px solid #e9ecef !important;
+                }
+                
+                #buyNowModal .order-section {
+                    border-left: none !important;
+                    border-top: 1px solid #e9ecef !important;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                #buyNowModal > div {
+                    max-width: 95vw !important;
+                    margin: 10px !important;
+                }
+                
+                #buyNowModal .form-section,
+                #buyNowModal .order-section {
+                    padding: 20px !important;
+                }
+                
+                #buyNowModal .modal-header {
+                    padding: 20px !important;
                 }
             }
 
