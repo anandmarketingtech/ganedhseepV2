@@ -86,8 +86,7 @@
 
 <body>
     <!-- Currency Selector -->
-    <div style="position:fixed;top: 24px;
-    left: 74%;z-index:10001;max-width:calc(100vw - 20px);box-sizing:border-box;">
+    <div style="position:fixed;top:25px;right:min(320px, 25vw);z-index:10001;max-width:calc(100vw - 20px);box-sizing:border-box;">
         <select id="currencySelector"
             style="background:#23232b;color:#fff;border:1px solid #444;border-radius:8px;padding:8px 12px;font-size:0.9em;cursor:pointer;min-width:80px;max-width:calc(100vw - 40px);box-sizing:border-box;">
             <option value="NPR">NPR</option>
@@ -117,67 +116,14 @@
         <div id="cartItems">
             <div id="cartEmptyMsg">Your cart is empty.</div>
         </div>
+        <div class="terms" style="text-align: center; margin: 18px 0 0 0;">
+            <label style="font-size: 15px; color: #333; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <input type="checkbox" id="acceptTerms" style="margin-right: 8px; width: 18px; height: 18px; accent-color: #28a745;" />
+                <span>I accept the <a href="return-policy.html" target="_blank" style="color: #007bff; text-decoration: underline;">Terms and Conditions</a></span>
+            </label>
+        </div>
         <div class="cart-total">
-            <div class="terms" style="text-align: center; margin: 18px 0 0 0;">
-                <label style="font-size: 15px; color: #333; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <input type="checkbox" id="acceptTerms" style="margin-right: 8px; width: 18px; height: 18px; accent-color: #28a745;" />
-                    <span>I accept the <a href="return-policy.html" target="_blank" style="color: #007bff; text-decoration: underline;">Terms and Conditions</a></span>
-                </label>
-            </div>
             <button id="cartBuyNowBtn" disabled style="width: 95%; margin: 18px auto 10px auto; display: block; background: #6c757d; color: #fff; font-size: 1.2em; font-weight: 600; border: none; border-radius: 12px; padding: 16px 0; cursor: not-allowed; opacity: 0.7; transition: opacity 0.2s, background 0.2s;">Buy Now</button>
-            <script>
-                // Inline script for Terms acceptance logic (bugfix: always start unchecked and disabled)
-                document.addEventListener('DOMContentLoaded', function() {
-                  var termsCheckbox = document.getElementById('acceptTerms');
-                  var buyNowBtn = document.getElementById('cartBuyNowBtn');
-                  if (termsCheckbox && buyNowBtn) {
-                    // Always start unchecked and disabled, and force style
-                    termsCheckbox.checked = false;
-                    buyNowBtn.disabled = true;
-                    buyNowBtn.style.background = '#6c757d';
-                    buyNowBtn.style.cursor = 'not-allowed';
-                    buyNowBtn.style.opacity = '0.7';
-                    function updateBuyNowBtn() {
-                      if (termsCheckbox.checked) {
-                        buyNowBtn.disabled = false;
-                        buyNowBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-                        buyNowBtn.style.cursor = 'pointer';
-                        buyNowBtn.style.opacity = '1';
-                      } else {
-                        buyNowBtn.disabled = true;
-                        buyNowBtn.style.background = '#6c757d';
-                        buyNowBtn.style.cursor = 'not-allowed';
-                        buyNowBtn.style.opacity = '0.7';
-                      }
-                    }
-                    termsCheckbox.addEventListener('change', updateBuyNowBtn);
-                    // Defensive: Prevent Buy Now if not checked, even if button is enabled
-                    buyNowBtn.addEventListener('click', function(e) {
-                      if (buyNowBtn.disabled || !termsCheckbox.checked) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        buyNowBtn.blur();
-                        return false;
-                      }
-                    }, true);
-                    // If modal is opened dynamically, always reset state
-                    var cartModal = document.getElementById('cartModal');
-                    if (cartModal) {
-                      // Use MutationObserver to detect when modal is shown (style.transform changes)
-                      var prevTransform = cartModal.style.transform;
-                      var observer = new MutationObserver(function() {
-                        var currentTransform = cartModal.style.transform;
-                        if (prevTransform !== currentTransform && currentTransform === 'translateX(0%)') {
-                          termsCheckbox.checked = false;
-                          updateBuyNowBtn();
-                        }
-                        prevTransform = currentTransform;
-                      });
-                      observer.observe(cartModal, { attributes: true, attributeFilter: ['style'] });
-                    }
-                  }
-                });
-            </script>
         </div>
     </div>
     <div id="cartModalOverlay"
@@ -185,52 +131,47 @@
     </div>
 
     <!-- Buy Now Modal -->
-    <div id="buyNowModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%, -50%);width:100%;max-width:450px;z-index:10003;background:transparent;">
-        <div class="flip-container first" style="perspective: 1000px; width: 100%; height: auto; position: relative;">
-            <div class="flipper" style="position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d;">
-                <!-- Front Side (Buy Now) -->
-                <div class="front" style="top: -30%;
-    left: 65%; background:#fff;border-radius:12px;width:100%;padding:32px 28px;position:relative;backface-visibility:hidden;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
-                    <button class="modal-close" onclick="hideBuyNowModal()" style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
-                    <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Order Summary</h3>
-                    <div id="orderSummary" style="background:#f8f9fa;padding:32px 16px 16px 16px;border-radius:8px;margin-bottom:24px;border:1px solid #e9ecef;">
-                        <h4 style="margin:0 0 12px 0;color:#333;font-size:1.1em;">Items in Cart</h4>
-                        <div id="orderItems" style="margin-bottom:12px;"></div>
-                        <div style="border-top:1px solid #ddd;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-weight:600;color:#333;">Total:</span>
-                            <span id="orderTotal" style="font-weight:700;color:#28a745;font-size:1.3em;">Rs. 0.00</span>
-                        </div>
-                    </div>
-                    <button onclick="flipCard()" style="width:100%;background:linear-gradient(135deg, #28a745, #20c997);color:#fff;font-size:1.2em;font-weight:600;border:none;border-radius:12px;padding:16px 0;cursor:pointer;transition:all 0.2s;">
-                        Continue to Checkout
-                    </button>
-                </div>
+    <div id="buyNowModal"
+        style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10003;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+        <div
+            style="background:#fff;border-radius:12px;max-width:900px;width:95vw;position:relative;box-shadow:0 10px 50px rgba(0,0,0,0.18);overflow:hidden;">
+            <button id="closeBuyNowModal"
+                style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;z-index:10;">&times;</button>
+            
+            <!-- Header -->
+            <div class="modal-header" style="padding:24px 32px;text-align:center;border-bottom:1px solid #e9ecef;">
+                <h3 style="margin:0;font-size:1.5em;color:#23232b;">Complete Your Order</h3>
+            </div>
+            
+            <!-- Horizontal Layout Container -->
+            <div class="horizontal-layout" style="display:flex;min-height:500px;">
                 
-                <!-- Back Side (Place Order Form) -->
-                <div class="back" style="top: -30%;             transform: rotateX(180deg);
-
-    left: 65%; background:#fff;border-radius:12px;width:100%;padding:32px 28px;position:absolute;backface-visibility:hidden;box-shadow:0 10px 50px rgba(0,0,0,0.18);">
-                    <button class="modal-close" onclick="unflipCard()" style="position:absolute;top:14px;left:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">←</button>
-                    <button class="modal-close" onclick="document.getElementById('buyNowModal').style.display='none'" style="position:absolute;top:14px;right:20px;font-size:1.8em;background:none;border:none;color:#444;cursor:pointer;transition:color 0.2s;">&times;</button>
-                    <h3 style="margin-bottom:24px;font-size:1.5em;color:#23232b;text-align:center;">Complete Your Order</h3>
+                <!-- Left Side - Form -->
+                <div class="form-section" style="flex:1;padding:32px;background:#fff;">
+                    <h4 style="margin:0 0 20px 0;color:#333;font-size:1.1em;">Customer Information</h4>
                     <form id="buyNowForm" autocomplete="off">
                         <div style="margin-bottom:18px;">
                             <label for="buyerName" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Full Name</label>
-                            <input id="buyerName" name="buyerName" type="text" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                            <input id="buyerName" name="buyerName" type="text" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:18px;">
                             <label for="buyerEmail" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Email Address</label>
-                            <input id="buyerEmail" name="buyerEmail" type="email" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                            <input id="buyerEmail" name="buyerEmail" type="email" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:18px;">
                             <label for="buyerPhone" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Phone Number</label>
-                            <input id="buyerPhone" name="buyerPhone" type="tel" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
+                            <input id="buyerPhone" name="buyerPhone" type="tel" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:22px;">
                             <label for="buyerAddress" style="font-weight:500;display:block;margin-bottom:6px;color:#444;">Delivery Address</label>
-                            <textarea id="buyerAddress" name="buyerAddress" required style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
+                            <textarea id="buyerAddress" name="buyerAddress" required
+                                style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;margin-top:4px;font-size:1em;transition:border-color 0.2s;resize:vertical;min-height:80px;box-sizing:border-box;"></textarea>
                         </div>
-                        <button type="submit" style="width:100%;background:linear-gradient(135deg, #28a745, #20c997);color:#fff;font-size:1.2em;font-weight:600;border:none;border-radius:12px;padding:16px 0;cursor:pointer;transition:all 0.2s;">
+                        <button id="buyNowSubmitBtn" type="submit"
+                            style="width:100%;background:linear-gradient(to right, #23232b, #3a3a4a);color:#fff;font-size:1.1em;font-weight:600;border:none;border-radius:8px;padding:14px 0;cursor:pointer;position:relative;transition:transform 0.2s, box-shadow 0.2s;">
                             Place Order
                             <span id="buyNowLoader" style="display:none;margin-left:10px;vertical-align:middle;">
                                 <svg width="22" height="22" viewBox="0 0 50 50">
@@ -245,100 +186,22 @@
                         </button>
                     </form>
                 </div>
+                
+                <!-- Right Side - Order Summary -->
+                <div class="order-section" style="flex:1;background:#f8f9fa;border-left:1px solid #e9ecef;padding:32px;">
+                    <div id="orderSummary">
+                        <h4 style="margin:0 0 20px 0;color:#333;font-size:1.1em;">Order Summary</h4>
+                        <div id="orderItems" style="margin-bottom:20px;"></div>
+                        <div style="border-top:1px solid #ddd;padding-top:16px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-weight:600;color:#333;font-size:1.1em;">Total:</span>
+                            <span id="orderTotal" style="font-weight:700;color:#28a745;font-size:1.4em;">Rs. 0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
         </div>
     </div>
-
-    <style>
-        /* Card Flip Animation Styles */
-        .flip-container {
-            perspective: 1000px;
-        }
-        
-        .flipper {
-            transition: transform 0.8s;
-            transform-style: preserve-3d;
-        }
-        
-        .front, .back {
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden; /* Safari */
-        }
-        
-        .back {
-            transform: rotateY(180deg);
-        }
-        
-        .flip-container.flipped .flipper {
-            transform: rotateX(180deg);
-        }
-
-        /* Hover effects for buttons */
-        button:not(.modal-close):hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
-        }
-
-        .modal-close:hover {
-            color: #000;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 480px) {
-            .front, .back {
-                padding: 24px 20px !important;
-            }
-        }
-    </style>
-
-    <script>
-        function flipCard() {
-            document.querySelector('.flip-container').classList.add('flipped');
-        }
-        
-        function unflipCard() {
-            document.querySelector('.flip-container').classList.remove('flipped');
-        }
-
-        function showBuyNowModal() {
-            const modal = document.getElementById('buyNowModal');
-            const overlay = document.getElementById('cartModalOverlay');
-            
-            // Show overlay
-            overlay.style.display = 'block';
-            setTimeout(() => overlay.style.opacity = '1', 10);
-            
-            // Show modal
-            modal.style.display = 'block';
-            document.querySelector('.flip-container').classList.remove('flipped');
-        }
-
-        function hideBuyNowModal() {
-            const modal = document.getElementById('buyNowModal');
-            const overlay = document.getElementById('cartModalOverlay');
-            
-            // Hide overlay with fade
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 200);
-            
-            // Hide modal
-            modal.style.display = 'none';
-            document.querySelector('.flip-container').classList.remove('flipped');
-        }
-
-        // Initialize Buy Now button handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            const buyNowButtons = document.querySelectorAll('.modal-buy-now');
-            buyNowButtons.forEach(button => {
-                button.addEventListener('click', showBuyNowModal);
-            });
-        });
-
-        // Update all modal close buttons
-        document.querySelectorAll('#buyNowModal .modal-close').forEach(btn => {
-            btn.onclick = () => hideBuyNowModal();
-        });
-    </script>
 
     <!-- Preloader Start -->
     <div id="preloader">
@@ -1579,6 +1442,59 @@
             }
         }, 200);
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var termsCheckbox = document.getElementById('acceptTerms');
+            var buyNowBtn = document.getElementById('cartBuyNowBtn');
+            var cartModal = document.getElementById('cartModal');
+
+            function updateBuyNowBtn() {
+                if (termsCheckbox.checked) {
+                    buyNowBtn.disabled = false;
+                    buyNowBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                    buyNowBtn.style.cursor = 'pointer';
+                    buyNowBtn.style.opacity = '1';
+                } else {
+                    buyNowBtn.disabled = true;
+                    buyNowBtn.style.background = '#6c757d';
+                    buyNowBtn.style.cursor = 'not-allowed';
+                    buyNowBtn.style.opacity = '0.7';
+                }
+            }
+
+            // Always start unchecked and disabled
+            function resetTermsState() {
+                termsCheckbox.checked = false;
+                updateBuyNowBtn();
+            }
+
+            // Listen for checkbox changes
+            termsCheckbox.addEventListener('change', updateBuyNowBtn);
+
+            // Defensive: Prevent Buy Now if not checked, even if button is enabled
+            buyNowBtn.addEventListener('click', function(e) {
+                if (buyNowBtn.disabled || !termsCheckbox.checked) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    buyNowBtn.blur();
+                    return false;
+                }
+            }, true);
+
+            // Reset state every time the cart modal is opened
+            var observer = new MutationObserver(function() {
+                if (cartModal.style.transform === 'translateX(0%)') {
+                    resetTermsState();
+                }
+            });
+            observer.observe(cartModal, { attributes: true, attributeFilter: ['style'] });
+
+            // Initial state
+            resetTermsState();
+        });
+    </script>
 </body>
 
 </html>
+
+
