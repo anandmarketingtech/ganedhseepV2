@@ -3038,3 +3038,12 @@ body,
     display: none !important;
   }
 }
+
+@media (min-width: 770px) {
+  .my-portfolio-item-6 {
+    margin-top: 550px !important;
+  }
+  .my-portfolio-item-7 {
+    margin-top: -300px !important;
+  }
+}
