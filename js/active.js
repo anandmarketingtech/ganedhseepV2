@@ -44,11 +44,11 @@
 
     // :: Nicescroll Active Code
     if ($.fn.niceScroll) {
-        $("body, textarea").niceScroll({
-            cursorcolor: "#151515",
-            cursorwidth: "6px",
-            background: "#f0f0f0"
-        });
+        // $("body, textarea").niceScroll({
+        //     cursorcolor: "#151515",
+        //     cursorwidth: "6px",
+        //     background: "#f0f0f0"
+        // });
     }
 
     // :: Owl Carousel Active Code
