@@ -530,6 +530,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get current exchange rate
         const rate = await getExchangeRate(currentCurrency);
         
+        console.log({
+            cart
+        })
         orderItemsDiv.innerHTML = cart.map(item => {
             const itemPrice = parseFloat(item.price || 0);
             const convertedItemPrice = convertPrice(itemPrice, rate);
@@ -537,13 +540,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             return `
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:8px 0;border-bottom:1px solid #e9ecef;">
-                    <div>
-                        <div style="font-weight:500;color:#333;">${item.title}</div>
-                        <div style="font-size:0.9em;color:#666;">
-                            ${formatCurrency(convertedItemPrice, currentCurrency)} × ${item.qty}
-                            ${item.color ? ` (${item.color})` : ''}
+                    <div style="display:flex; column-gap: 12px; align-items: center;">
+                    <img src="${item.product_images[0].image_url}" style="width: 60px; height: 60px; border-radius:8px; object-fit:cover;" />
+                         <div>
+                            <div style="font-weight:500;color:#333;">${item.title}</div>
+                            <div style="font-size:0.9em;color:#666;">
+                                ${formatCurrency(convertedItemPrice, currentCurrency)} × ${item.qty}
+                                ${item.color ? ` (${item.color})` : ''}
+                            </div>
                         </div>
-                    </div>
+                    </div>   
                     <div style="font-weight:600;color:#333;">${formatCurrency(itemTotal, currentCurrency)}</div>
                 </div>
             `;
