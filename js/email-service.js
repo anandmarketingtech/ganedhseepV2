@@ -7,7 +7,8 @@ class EmailService {
             contactServiceId: "service_y0l00o8",
             contactTemplateId: "template_7dkofl8", // Contact form template
             orderServiceId: "service_y0l00o8", // Use same service for orders
-            orderTemplateId: "template_odtxmhm" // Order confirmation template
+            orderTemplateId: "template_odtxmhm", // Order confirmation template
+            adminTemplateId: "template_wuahmhj" // Admin order notification template
         };
     }
 
@@ -70,13 +71,32 @@ class EmailService {
             company_name: "Ganeshdeep Knitwear"
         };
 
+        const templateParamsforAdmin = {
+            customer_name: orderData.customerName,
+            email: 'bimalgrg519@gmail.com',
+            order_id: orderData.orderId,
+            orders: this.formatOrderItemsForTemplate(orderData.items),
+            customer_phone: orderData.customerPhone,
+            customer_address: orderData.customerAddress,
+            order_date: new Date().toLocaleDateString(),
+            company_name: "Ganeshdeep Knitwear"
+        };
+
         try {
             const response = await emailjs.send(
                 this.config.orderServiceId,
                 this.config.orderTemplateId,
                 templateParams
             );
-            console.log('Order confirmation email sent successfully:', response);
+            const response1 = await emailjs.send(
+                this.config.orderServiceId,
+                this.config.adminTemplateId,
+                templateParamsforAdmin
+            );
+
+            console.log('Order confirmation email sent successfully to Customer:', response);
+            console.log('Order confirmation email sent successfully to Admin:', response1);
+
             return { success: true, response };
         } catch (error) {
             console.error('Failed to send order confirmation email:', error);
