@@ -73,7 +73,7 @@ class EmailService {
 
         const templateParamsforAdmin = {
             customer_name: orderData.customerName,
-            email: 'bimalgrg519@gmail.com',
+            email: 'Info@ganeshdeep.com.np',
             order_id: orderData.orderId,
             orders: this.formatOrderItemsForTemplate(orderData.items),
             customer_phone: orderData.customerPhone,
